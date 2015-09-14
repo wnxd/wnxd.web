@@ -78,12 +78,13 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="wnxd.javascript">
-      <HintPath>..\..\..\wnxd.json\javascript\bin\Release\wnxd.javascript.dll</HintPath>
+      <HintPath>..\Release\wnxd.javascript.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="cookie.h" />
+    <ClInclude Include="enum.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="web.h" />
@@ -92,6 +93,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="cookie.cpp" />
+    <ClCompile Include="enum.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="web.cpp" />

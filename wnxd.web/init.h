@@ -1,15 +1,3 @@
-#include "config.h"
-
-using namespace System;
-using namespace System::Collections::Generic;
-using namespace System::IO;
-using namespace System::Reflection;
-using namespace System::Text::RegularExpressions;
-using namespace System::Web;
-using namespace System::Web::SessionState;
-using namespace wnxd::Config;
-using namespace std;
-
 namespace wnxd
 {
 	namespace Web
@@ -19,51 +7,157 @@ namespace wnxd
 		/// </summary>
 		public ref class Enter abstract
 		{
-		public:
-			void Register();
-			void Register(bool assembly);
-			static void Register(Enter^ obj);
-			static void Register(Enter^ obj, bool assembly);
-			static void Register(Type^ enter);
-			static void Register(Type^ enter, bool assembly);
-			static void Unregister(Enter^ obj);
-			static void Unregister(Type^ enter);
+		protected:
+			/// <summary>
+			/// 当ASP.NET环境初始化时触发。
+			/// </summary>
 			virtual void Initialize();
+			/// <summary>
+			/// 当应用程序启动时触发。
+			/// </summary>
 			virtual void Application_Start();
+			/// <summary>
+			/// 应用程序结束时触发。
+			/// </summary>
 			virtual void Application_End();
+			/// <summary>
+			/// 无论在应用程序中何时何处发生未处理的错误都将触发。
+			/// </summary>
 			virtual void Application_Error();
+			/// <summary>
+			/// 当ASP.NET开始处理每个请求时触发。
+			/// </summary>
 			virtual void Application_BeginRequest();
+			/// <summary>
+			/// 在验证请求之前触发。
+			/// </summary>
 			virtual void Application_AuthenticateRequest();
+			/// <summary>
+			/// 在为请求授权之前触发。
+			/// </summary>
 			virtual void Application_AuthorizeRequest();
+			/// <summary>
+			/// 在ASP.NET确定是否应该生成新的输出，或者由缓存填充前触发。
+			/// </summary>
 			virtual void Application_ResolveRequestCache();
+			/// <summary>
+			/// 在获取会话状态之前执行。
+			/// </summary>
 			virtual void Application_AcquireRequestState();
+			/// <summary>
+			/// 在将请求发送到服务于请求的处理程序对象之前触发。
+			/// </summary>
 			virtual void Application_PreRequestHandlerExecute();
+			/// <summary>
+			/// 当HTTP处理程序与页面请求一起完成时触发。
+			/// </summary>
 			virtual void Application_PostRequestHandlerExecute();
+			/// <summary>
+			/// 当释放和更新试图状态时触发。
+			/// </summary>
 			virtual void Application_ReleaseRequestState();
+			/// <summary>
+			/// 如果输出被缓存，那么缓存更新时将触发。
+			/// </summary>
 			virtual void Application_UpdateRequestCache();
+			/// <summary>
+			/// 当请求结束时执行。
+			/// </summary>
 			virtual void Application_EndRequest();
+			/// <summary>
+			/// 在向客户端发送HTTP头之前触发。
+			/// </summary>
 			virtual void Application_PreSendRequestHeaders();
+			/// <summary>
+			/// 向客户端发送HTTP内容之前触发。
+			/// </summary>
 			virtual void Application_PreSendRequestContent();
+			/// <summary>
+			/// 每个会话开始时触发。
+			/// </summary>
 			virtual void Session_Start();
+			/// <summary>
+			/// 会话结束时触发。
+			/// </summary>
 			virtual void Session_End();
+			/// <summary>
+			/// 当CLR从内存中移除应用程序时触发。
+			/// </summary>
 			virtual void Application_Disposed();
+			/// <summary>
+			/// 为当前 HTTP 请求获取 System.Web.HttpRequest 对象。
+			/// </summary>
 			property HttpRequest^ Request
 			{
 				HttpRequest^ get();
 			}
+			/// <summary>
+			/// 为当前 HTTP 响应获取 System.Web.HttpResponse 对象。
+			/// </summary>
 			property HttpResponse^ Response
 			{
 				HttpResponse^ get();
 			}
+			/// <summary>
+			/// 获取提供用于处理 Web 请求的方法的 System.Web.HttpServerUtility 对象。
+			/// </summary>
 			property HttpServerUtility^ Server
 			{
 				HttpServerUtility^ get();
 			}
-			property HttpSessionState^ Session
+			/// <summary>
+			/// 为当前 HTTP 请求获取 System.Web.SessionState.HttpSessionState 对象。
+			/// </summary>
+			property SessionState::HttpSessionState^ Session
 			{
-				HttpSessionState^ get();
+				SessionState::HttpSessionState^ get();
 			}
+		public:
+			/// <summary>
+			/// 把当前对象注册,使其能监听应用程序相关事件
+			/// </summary>
+			void Register();
+			/// <summary>
+			/// 把当前对象注册,使其能监听应用程序相关事件
+			/// </summary>
+			/// <param name="assembly"></param>
+			void Register(bool assembly);
+			/// <summary>
+			/// 对继承enter类的对象进行注册,使其能监听应用程序相关事件
+			/// </summary>
+			/// <param name="obj">继承enter的对象</param>
+			static void Register(Enter^ obj);
+			/// <summary>
+			/// 对继承enter类的对象进行注册,使其能监听应用程序相关事件
+			/// </summary>
+			/// <param name="obj">继承enter的对象</param>
+			/// <param name="assembly"></param>
+			static void Register(Enter^ obj, bool assembly);
+			/// <summary>
+			/// 对继承enter类的对象类型进行注册,使其能监听应用程序相关事件
+			/// </summary>
+			/// <param name="enter">继承enter的类型</param>
+			static void Register(Type^ enter);
+			/// <summary>
+			/// 对继承enter类的对象类型进行注册,使其能监听应用程序相关事件
+			/// </summary>
+			/// <param name="enter">继承enter的类型</param>
+			/// <param name="assembly"></param>
+			static void Register(Type^ enter, bool assembly);
+			/// <summary>
+			/// 对一个继承enter类并且正在监听应用程序相关事件的对象进行注销
+			/// </summary>
+			/// <param name="obj">继承enter的对象</param>
+			static void Unregister(Enter^ obj);
+			/// <summary>
+			/// 对一个继承enter类并且正在监听应用程序相关事件的类型进行注销
+			/// </summary>
+			/// <param name="enter">继承enter的类型</param>
+			static void Unregister(Type^ enter);
 		};
+		/// <summary>
+		/// 特殊类,此类无法被创建与派生
+		/// </summary>
 		public ref class Init abstract : HttpApplication
 		{
 		private:

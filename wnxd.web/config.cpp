@@ -1,3 +1,10 @@
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::IO;
+using namespace System::Linq;
+using namespace System::Text;
+using namespace System::Xml;
+
 #include "config.h"
 
 using namespace wnxd::Config;

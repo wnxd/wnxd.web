@@ -1,11 +1,3 @@
-#include "Resource.h"
-
-using namespace System;
-using namespace System::Collections::Generic;
-using namespace System::Reflection;
-using namespace System::Web;
-using namespace System::Web::UI;
-
 namespace wnxd
 {
 	namespace Web

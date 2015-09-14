@@ -1,3 +1,5 @@
+using namespace System;
+
 #include "Resource.h"
 
 using namespace wnxd::Web;

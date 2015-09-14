@@ -1,3 +1,12 @@
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::Collections::Specialized;
+using namespace System::Linq;
+using namespace System::Text;
+using namespace System::Web;
+using namespace wnxd::javascript;
+
+#include "init.h"
 #include "cookie.h"
 #include "Resource.h"
 
@@ -8,14 +17,36 @@ void Cookie::Init()
 {
 
 }
+void Cookie::Set(HttpCookie^ cookie)
+{
+	Set(cookie, String::Empty);
+}
 void Cookie::Set(HttpCookie^ cookie, String^ domain)
 {
 	HttpContext::Current->Response->AppendCookie(cookie);
 	if (!String::IsNullOrEmpty(domain)) Sync(domain, cookie);
 }
+void Cookie::Set(HttpCookie^ cookie, IList<String^>^ domains)
+{
+	HttpContext::Current->Response->AppendCookie(cookie);
+	Sync(domains, cookie);
+}
+void Cookie::Sync(String^ domain, HttpCookie^ cookie)
+{
+	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
+	json^ d = (json^)list[domain];
+	if (d->Value == js::undefined) d = gcnew json();
+	d->push(cookie);
+	list[domain] = d;
+}
+void Cookie::Sync(IList<String^>^ domains, HttpCookie^ cookie)
+{
+	for (int i = 0; i < domains->Count; i++) Sync(domains[i], cookie);
+}
+
 //class cookie_enter
 //public
-void cookie_enter::Application_BeginRequest()
+void Cookie::cookie_enter::Application_BeginRequest()
 {
 	if (this->Request->QueryString["wnxd_cookie"] == "sync")
 	{
@@ -40,7 +71,7 @@ void cookie_enter::Application_BeginRequest()
 		this->Response->End();
 	}
 }
-void cookie_enter::Application_EndRequest()
+void Cookie::cookie_enter::Application_EndRequest()
 {
 	if (Cookie::list->Value != js::undefined)
 	{

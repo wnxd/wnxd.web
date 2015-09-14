@@ -1,82 +1,18 @@
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::IO;
+using namespace System::Reflection;
+using namespace System::Text::RegularExpressions;
+using namespace System::Web;
+using namespace System::Web::SessionState;
+
 #include "init.h"
+#include "config.h"
 
 using namespace wnxd::Web;
+using namespace wnxd::Config;
 //class Enter
-//public
-void Enter::Register()
-{
-	this->Register(true);
-}
-void Enter::Register(bool assembly)
-{
-	Register(this->GetType(), assembly);
-}
-void Enter::Register(Enter^ obj)
-{
-	Register(obj, true);
-}
-void Enter::Register(Enter^ obj, bool assembly)
-{
-	Register(obj->GetType(), assembly);
-}
-void Enter::Register(Type^ enter)
-{
-	Register(enter, true);
-}
-void Enter::Register(Type^ enter, bool assembly)
-{
-	if (Enter::typeid->IsAssignableFrom(enter))
-	{
-		config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
-		String^ s = config["enter_list"], ^aqn = assembly ? enter->AssemblyQualifiedName : enter->FullName;
-		if (String::IsNullOrEmpty(s)) s = aqn;
-		else
-		{
-			if (s->Contains(aqn)) goto next;
-			s += "||" + aqn;
-		}
-		config["enter_list"] = s;
-		if (Init::_enter_list == nullptr) Init::_enter_list = gcnew List<Enter^>();
-		Init::_enter_list->Add((Enter^)Activator::CreateInstance(enter));
-	next:
-		String^ path = AppDomain::CurrentDomain->BaseDirectory + "Global.asax";
-		if (File::Exists(path))
-		{
-			String^ str = file::ReadFile(path);
-			Match^ mc = (gcnew Regex("Inherits=\"(.*?)\""))->Match(str);
-			if (mc != nullptr)
-			{
-				if (mc->Groups[1]->Value == "wnxd.web.init") return;
-				config["old_Global"] = mc->Groups[1]->Value;
-			}
-			File::SetAttributes(path, FileAttributes::Normal);
-		}
-		file::WriteFile(path, "<%@ Application Inherits=\"wnxd.web.init\" Language=\"C#\" %>");
-	}
-}
-void Enter::Unregister(Enter^ obj)
-{
-	Unregister(obj->GetType());
-}
-void Enter::Unregister(Type^ enter)
-{
-	if (Enter::typeid->IsAssignableFrom(enter))
-	{
-		if (Init::_enter_list != nullptr)
-		{
-			for (int i = 0; i < Init::_enter_list->Count; i++)
-			{
-				if (Init::_enter_list[i]->GetType() == enter)
-				{
-					Init::_enter_list->RemoveAt(i);
-					config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
-					config["enter_list"] = String::Join("||", Init::_enter_list);
-					break;
-				}
-			}
-		}
-	}
-}
+//protected
 void Enter::Initialize()
 {
 
@@ -169,6 +105,81 @@ HttpSessionState^ Enter::Session::get()
 {
 	return HttpContext::Current->Session;
 }
+//public
+void Enter::Register()
+{
+	this->Register(true);
+}
+void Enter::Register(bool assembly)
+{
+	Register(this->GetType(), assembly);
+}
+void Enter::Register(Enter^ obj)
+{
+	Register(obj, true);
+}
+void Enter::Register(Enter^ obj, bool assembly)
+{
+	Register(obj->GetType(), assembly);
+}
+void Enter::Register(Type^ enter)
+{
+	Register(enter, true);
+}
+void Enter::Register(Type^ enter, bool assembly)
+{
+	if (Enter::typeid->IsAssignableFrom(enter))
+	{
+		config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
+		String^ s = config["enter_list"], ^aqn = assembly ? enter->AssemblyQualifiedName : enter->FullName;
+		if (String::IsNullOrEmpty(s)) s = aqn;
+		else
+		{
+			if (s->Contains(aqn)) goto next;
+			s += "||" + aqn;
+		}
+		config["enter_list"] = s;
+		if (Init::_enter_list == nullptr) Init::_enter_list = gcnew List<Enter^>();
+		Init::_enter_list->Add((Enter^)Activator::CreateInstance(enter));
+	next:
+		String^ path = AppDomain::CurrentDomain->BaseDirectory + "Global.asax";
+		if (File::Exists(path))
+		{
+			String^ str = file::ReadFile(path);
+			Match^ mc = (gcnew Regex("Inherits=\"(.*?)\""))->Match(str);
+			if (mc != nullptr)
+			{
+				if (mc->Groups[1]->Value == "wnxd.web.init") return;
+				config["old_Global"] = mc->Groups[1]->Value;
+			}
+			File::SetAttributes(path, FileAttributes::Normal);
+		}
+		file::WriteFile(path, "<%@ Application Inherits=\"wnxd.web.init\" Language=\"C#\" %>");
+	}
+}
+void Enter::Unregister(Enter^ obj)
+{
+	Unregister(obj->GetType());
+}
+void Enter::Unregister(Type^ enter)
+{
+	if (Enter::typeid->IsAssignableFrom(enter))
+	{
+		if (Init::_enter_list != nullptr)
+		{
+			for (int i = 0; i < Init::_enter_list->Count; i++)
+			{
+				if (Init::_enter_list[i]->GetType() == enter)
+				{
+					Init::_enter_list->RemoveAt(i);
+					config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
+					config["enter_list"] = String::Join("||", Init::_enter_list);
+					break;
+				}
+			}
+		}
+	}
+}
 //class Init
 //private
 void Init::_init()
@@ -238,22 +249,20 @@ void Init::_init()
 }
 void Init::_callback(String^ method, array<Object^>^ parameters)
 {
+	BindingFlags all = BindingFlags::Instance | BindingFlags::Static | BindingFlags::Public | BindingFlags::NonPublic;
 	if (this->_old_app != nullptr)
 	{
-		MethodInfo^ mi = this->_old_type->GetMethod(method, BindingFlags::Instance | BindingFlags::Static | BindingFlags::Public | BindingFlags::NonPublic);
+		MethodInfo^ mi = this->_old_type->GetMethod(method, all);
 		if (mi != nullptr)
 		{
 			int len = mi->GetParameters()->Length;
 			if (len == 0) mi->Invoke(this->_old_app, nullptr);
-			else if (len == 2)
-			{
-				mi->Invoke(this->_old_app, parameters);
-			}
+			else if (len == 2) mi->Invoke(this->_old_app, parameters);
 		}
 	}
 	if (_enter_list != nullptr)
 	{
-		MethodInfo^ mi = Enter::typeid->GetMethod(method, Type::EmptyTypes);
+		MethodInfo^ mi = Enter::typeid->GetMethod(method, all, nullptr, Type::EmptyTypes, nullptr);
 		for (int i = 0; i < _enter_list->Count; i++) mi->Invoke(_enter_list[i], nullptr);
 	}
 }

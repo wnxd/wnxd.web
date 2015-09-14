@@ -1,4 +1,11 @@
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::Reflection;
+using namespace System::Web;
+using namespace System::Web::UI;
+
 #include "web.h"
+#include "Resource.h"
 //private
 wnxd::Web::Web^ wnxd::Web::Web::_FindFirst(Control^ control)
 {

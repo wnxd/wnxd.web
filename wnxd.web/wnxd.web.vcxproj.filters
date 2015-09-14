@@ -29,6 +29,9 @@
     <ClInclude Include="cookie.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="enum.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp">
@@ -49,6 +52,9 @@
     <ClCompile Include="cookie.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="enum.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\cookie.js">
@@ -62,6 +68,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resource.resx" />
+    <EmbeddedResource Include="Resource.resx">
+      <Filter>Resources</Filter>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
