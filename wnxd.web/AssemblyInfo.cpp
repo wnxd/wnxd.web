@@ -9,12 +9,12 @@ using namespace System::Security::Permissions;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 //
-[assembly:AssemblyTitleAttribute(L"wnxdweb")];
+[assembly:AssemblyTitleAttribute(L"wnxd.web")];
 [assembly:AssemblyDescriptionAttribute(L"")];
 [assembly:AssemblyConfigurationAttribute(L"")];
-[assembly:AssemblyCompanyAttribute(L"")];
-[assembly:AssemblyProductAttribute(L"wnxdweb")];
-[assembly:AssemblyCopyrightAttribute(L"Copyright (c)  2015")];
+[assembly:AssemblyCompanyAttribute(L"为你芯冻")];
+[assembly:AssemblyProductAttribute(L"wnxd.web")];
+[assembly:AssemblyCopyrightAttribute(L"为你芯冻")];
 [assembly:AssemblyTrademarkAttribute(L"")];
 [assembly:AssemblyCultureAttribute(L"")];
 
