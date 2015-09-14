@@ -28,7 +28,41 @@ namespace wnxd
 			static void Register(Type^ enter, bool assembly);
 			static void Unregister(Enter^ obj);
 			static void Unregister(Type^ enter);
-
+			virtual void Initialize();
+			virtual void Application_Start();
+			virtual void Application_End();
+			virtual void Application_Error();
+			virtual void Application_BeginRequest();
+			virtual void Application_AuthenticateRequest();
+			virtual void Application_AuthorizeRequest();
+			virtual void Application_ResolveRequestCache();
+			virtual void Application_AcquireRequestState();
+			virtual void Application_PreRequestHandlerExecute();
+			virtual void Application_PostRequestHandlerExecute();
+			virtual void Application_ReleaseRequestState();
+			virtual void Application_UpdateRequestCache();
+			virtual void Application_EndRequest();
+			virtual void Application_PreSendRequestHeaders();
+			virtual void Application_PreSendRequestContent();
+			virtual void Session_Start();
+			virtual void Session_End();
+			virtual void Application_Disposed();
+			property HttpRequest^ Request
+			{
+				HttpRequest^ get();
+			}
+			property HttpResponse^ Response
+			{
+				HttpResponse^ get();
+			}
+			property HttpServerUtility^ Server
+			{
+				HttpServerUtility^ get();
+			}
+			property HttpSessionState^ Session
+			{
+				HttpSessionState^ get();
+			}
 		};
 		public ref class Init abstract : HttpApplication
 		{

@@ -26,6 +26,9 @@
     <ClInclude Include="init.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="cookie.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp">
@@ -41,6 +44,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="init.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="cookie.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -77,6 +77,98 @@ void Enter::Unregister(Type^ enter)
 		}
 	}
 }
+void Enter::Initialize()
+{
+
+}
+void Enter::Application_Start()
+{
+
+}
+void Enter::Application_End()
+{
+
+}
+void Enter::Application_Error()
+{
+
+}
+void Enter::Application_BeginRequest()
+{
+
+}
+void Enter::Application_AuthenticateRequest()
+{
+
+}
+void Enter::Application_AuthorizeRequest()
+{
+
+}
+void Enter::Application_ResolveRequestCache()
+{
+
+}
+void Enter::Application_AcquireRequestState()
+{
+
+}
+void Enter::Application_PreRequestHandlerExecute()
+{
+
+}
+void Enter::Application_PostRequestHandlerExecute()
+{
+
+}
+void Enter::Application_ReleaseRequestState()
+{
+
+}
+void Enter::Application_UpdateRequestCache()
+{
+
+}
+void Enter::Application_EndRequest()
+{
+
+}
+void Enter::Application_PreSendRequestHeaders()
+{
+
+}
+void Enter::Application_PreSendRequestContent()
+{
+
+}
+void Enter::Session_Start()
+{
+
+}
+void Enter::Session_End()
+{
+
+}
+void Enter::Application_Disposed()
+{
+
+}
+HttpRequest^ Enter::Request::get()
+{
+	return HttpContext::Current->Request;
+}
+HttpResponse^ Enter::Response::get()
+{
+	return HttpContext::Current->Response;
+}
+HttpServerUtility^ Enter::Server::get()
+{
+	return HttpContext::Current->Server;
+}
+HttpSessionState^ Enter::Session::get()
+{
+	return HttpContext::Current->Session;
+}
 //class Init
 //private
 void Init::_init()
