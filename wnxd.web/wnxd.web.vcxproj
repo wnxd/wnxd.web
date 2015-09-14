@@ -86,6 +86,7 @@
     <ClInclude Include="cookie.h" />
     <ClInclude Include="enum.h" />
     <ClInclude Include="init.h" />
+    <ClInclude Include="load.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="web.h" />
   </ItemGroup>
@@ -95,6 +96,7 @@
     <ClCompile Include="cookie.cpp" />
     <ClCompile Include="enum.cpp" />
     <ClCompile Include="init.cpp" />
+    <ClCompile Include="load.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="web.cpp" />
   </ItemGroup>
