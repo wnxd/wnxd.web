@@ -86,6 +86,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="init.cpp" />
+    <ClCompile Include="Resource.cpp" />
     <ClCompile Include="web.cpp" />
   </ItemGroup>
   <ItemGroup>
