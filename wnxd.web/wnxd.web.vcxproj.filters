@@ -9,38 +9,44 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource">
-      <UniqueIdentifier>{e44a78c3-d985-4f46-bff4-a65a388bb511}</UniqueIdentifier>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{805817fc-871c-4d45-8733-83caf6636983}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="wnxd.web.h">
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="web.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="init.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="wnxd.web.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="AssemblyInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="web.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cookie.js">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="Resources\load.js">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="Resources\web.js">
+      <Filter>Resources</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\wnxd.web\web\Resources\cookie.js" />
-    <None Include="..\..\..\wnxd.web\web\Resources\load.js" />
-    <None Include="..\..\..\wnxd.web\web\Resources\web.js" />
-    <None Include="Resources\cookie.js">
-      <Filter>Resource</Filter>
-    </None>
-    <None Include="Resources\load.js">
-      <Filter>Resource</Filter>
-    </None>
-    <None Include="Resources\web.js">
-      <Filter>Resource</Filter>
-    </None>
   </ItemGroup>
 </Project>

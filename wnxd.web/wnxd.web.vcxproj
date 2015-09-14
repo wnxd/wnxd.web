@@ -79,22 +79,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="wnxd.web.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="init.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="web.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="wnxd.web.cpp" />
+    <ClCompile Include="web.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resource.resx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\wnxd.web\web\Resources\cookie.js" />
-    <None Include="..\..\..\wnxd.web\web\Resources\load.js" />
-    <None Include="..\..\..\wnxd.web\web\Resources\web.js" />
     <None Include="Resources\cookie.js" />
     <None Include="Resources\load.js" />
     <None Include="Resources\web.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource.resx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
