@@ -9,6 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{e44a78c3-d985-4f46-bff4-a65a388bb511}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wnxd.web.h">
@@ -22,5 +25,22 @@
     <ClCompile Include="AssemblyInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\wnxd.web\web\Resources\cookie.js" />
+    <None Include="..\..\..\wnxd.web\web\Resources\load.js" />
+    <None Include="..\..\..\wnxd.web\web\Resources\web.js" />
+    <None Include="Resources\cookie.js">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resources\load.js">
+      <Filter>Resource</Filter>
+    </None>
+    <None Include="Resources\web.js">
+      <Filter>Resource</Filter>
+    </None>
   </ItemGroup>
 </Project>
