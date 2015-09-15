@@ -15,21 +15,12 @@ namespace wnxd
 		{
 			static Html()
 			{
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "Add"), Hook::GetMethod(Html::typeid, "List_Add"));
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "AddRange"), Hook::GetMethod(Html::typeid, "List_AddRange"));
-				//Hook::Register(Hook::GetMethod(List<String^>::typeid, "set_Item"), Hook::GetMethod(Html::typeid, "List_Item_set"));
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "Insert"), Hook::GetMethod(Html::typeid, "List_Insert"));
-				//Hook::Register(Hook::GetMethod(List<String^>::typeid, "InsertRange"), Hook::GetMethod(Html::typeid, "List_InsertRange"));
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "Remove"), Hook::GetMethod(Html::typeid, "List_Remove"));
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveAll"), Hook::GetMethod(Html::typeid, "List_RemoveAll"));
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveAt"), Hook::GetMethod(Html::typeid, "List_RemoveAt"));
-				//Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveRange"), Hook::GetMethod(Html::typeid, "List_RemoveRange"));
-				Hook::Register(Hook::GetMethod(List<String^>::typeid, "Clear"), Hook::GetMethod(Html::typeid, "List_Clear"));
 				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "Add"), Hook::GetMethod(Html::typeid, "Dictionary_Add"));
-				//Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "set_Item"), Hook::GetMethod(Html::typeid, "Dictionary_Item_set"));
+				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "set_Item"), Hook::GetMethod(Html::typeid, "Dictionary_Item_set"));
 				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "Remove"), Hook::GetMethod(Html::typeid, "Dictionary_Remove"));
 				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "Clear"), Hook::GetMethod(Html::typeid, "Dictionary_Clear"));
 			}
+			~Html();
 		private:
 			static IDictionary<Html^, IList<String^>^>^ List_hooklist = gcnew Dictionary<Html^, IList<String^>^>();
 			static IDictionary<Html^, IDictionary<String^, String^>^>^ Dictionary_hooklist = gcnew Dictionary<Html^, IDictionary<String^, String^>^>();

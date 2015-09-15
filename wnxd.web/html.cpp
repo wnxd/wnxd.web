@@ -3,6 +3,11 @@
 
 using namespace wnxd::Web;
 //class Html
+Html::~Html()
+{
+	if (List_hooklist->ContainsKey(this)) List_hooklist->Remove(this);
+	if (Dictionary_hooklist->ContainsKey(this)) Dictionary_hooklist->Remove(this);
+}
 //private
 void Html::List_Add(List<Object^>^ target, Object^ item)
 {
@@ -371,10 +376,30 @@ IList<String^>^ Html::classList::get()
 	if (className != nullptr) if (className != String::Empty) list->AddRange(className->Split(' '));
 	if (List_hooklist->ContainsKey(this)) List_hooklist[this] = list;
 	else List_hooklist->Add(this, list);
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Add"), Hook::GetMethod(Html::typeid, "List_Add"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "AddRange"), Hook::GetMethod(Html::typeid, "List_AddRange"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "set_Item"), Hook::GetMethod(Html::typeid, "List_Item_set"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Insert"), Hook::GetMethod(Html::typeid, "List_Insert"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "InsertRange"), Hook::GetMethod(Html::typeid, "List_InsertRange"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Remove"), Hook::GetMethod(Html::typeid, "List_Remove"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveAll"), Hook::GetMethod(Html::typeid, "List_RemoveAll"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveAt"), Hook::GetMethod(Html::typeid, "List_RemoveAt"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveRange"), Hook::GetMethod(Html::typeid, "List_RemoveRange"));
+	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Clear"), Hook::GetMethod(Html::typeid, "List_Clear"));
 	return list;
 }
 void Html::classList::set(IList<String^>^ value)
 {
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Add"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "AddRange"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "set_Item"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Insert"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "InsertRange"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Remove"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "RemoveAll"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "RemoveAt"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "RemoveRange"));
+	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Clear"));
 	IDictionary<String^, String^>^ attr = this->attributes;
 	if (value == nullptr) { if (attr != nullptr) attr->Remove("class"); }
 	else
