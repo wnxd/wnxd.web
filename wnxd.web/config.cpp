@@ -33,7 +33,7 @@ void config::Write(String^ key, String^ val)
 	StringBuilder^ sb = gcnew StringBuilder();
 	StringWriter^ sw = gcnew StringWriter(sb);
 	dom->Save(sw);
-	sw->Close();
+	delete sw;
 	file::WriteFile(this->_path, sb->ToString());
 }
 String^ config::default::get(String^ key)
@@ -55,8 +55,8 @@ String^ file::ReadFile(String^ path)
 		FileStream^ fs = File::Open(path, FileMode::OpenOrCreate, FileAccess::Read, FileShare::Read);
 		StreamReader^ sr = gcnew StreamReader(fs);
 		res = sr->ReadToEnd();
-		sr->Close();
-		fs->Close();
+		delete sr;
+		delete fs;
 	}
 	catch (...)
 	{
@@ -72,8 +72,8 @@ void file::WriteFile(String^ path, String^ contents)
 		StreamWriter^ sw = gcnew StreamWriter(fs);
 		sw->Write(contents);
 		sw->Flush();
-		sw->Close();
-		fs->Close();
+		delete sw;
+		delete fs;
 	}
 	catch (...)
 	{

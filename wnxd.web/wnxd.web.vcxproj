@@ -69,6 +69,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies />
+      <SuppressStartupBanner>true</SuppressStartupBanner>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -77,6 +78,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
+    <Reference Include="wnxd.asm">
+      <HintPath>..\Release\wnxd.asm.dll</HintPath>
+    </Reference>
     <Reference Include="wnxd.javascript">
       <HintPath>..\Release\wnxd.javascript.dll</HintPath>
     </Reference>

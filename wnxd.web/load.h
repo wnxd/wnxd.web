@@ -13,17 +13,17 @@ namespace wnxd
 		public ref class Load : Control
 		{
 		private:
+			ref class load_enter : Enter
+			{
+			protected:
+				void Application_BeginRequest() override;
+			};
 			int _threshold = 200;
 			bool _jump = false, _refresh = false;
 			bool _SaveHtml();
 			static Load^ _FindFirst(Control^ control);
 			static Load^ _Find(Control^ control, String^ id);
 			static List<Load^>^ _Find(Control^ control);
-			ref class load_enter : Enter
-			{
-			protected:
-				void Application_BeginRequest() override;
-			};
 		internal:
 			bool Insert = false;
 		public:

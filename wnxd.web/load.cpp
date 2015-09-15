@@ -37,13 +37,13 @@ bool Load::_SaveHtml()
 		StringWriter^ sw = gcnew StringWriter(html);
 		HtmlTextWriter^ htw = gcnew HtmlTextWriter(sw);
 		this->Control::Render(htw);
-		htw->Close();
-		sw->Close();
+		delete htw;
+		delete sw;
 		node->InnerText = HttpUtility::UrlEncode(html->ToString());
 		html = gcnew StringBuilder();
 		sw = gcnew StringWriter(html);
 		dom->Save(sw);
-		sw->Close();
+		delete sw;
 		file::WriteFile(path, html->ToString());
 	}
 	if (this->_refresh)
