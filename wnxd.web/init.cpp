@@ -141,12 +141,12 @@ void Enter::Register(Type^ enter, bool assembly)
 			Match^ mc = (gcnew Regex("Inherits=\"(.*?)\""))->Match(str);
 			if (mc != nullptr)
 			{
-				if (mc->Groups[1]->Value == "wnxd.web.init") return;
+				if (mc->Groups[1]->Value == "wnxd.Web.Init") return;
 				config["old_Global"] = mc->Groups[1]->Value;
 			}
 			File::SetAttributes(path, FileAttributes::Normal);
 		}
-		file::WriteFile(path, "<%@ Application Inherits=\"wnxd.web.init\" Language=\"C#\" %>");
+		file::WriteFile(path, "<%@ Application Inherits=\"wnxd.Web.Init\" Language=\"C#\" %>");
 	}
 }
 void Enter::Unregister(Enter^ obj)

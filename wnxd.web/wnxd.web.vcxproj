@@ -85,6 +85,7 @@
     <ClInclude Include="config.h" />
     <ClInclude Include="cookie.h" />
     <ClInclude Include="enum.h" />
+    <ClInclude Include="html.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="load.h" />
     <ClInclude Include="Resource.h" />
@@ -95,6 +96,7 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="cookie.cpp" />
     <ClCompile Include="enum.cpp" />
+    <ClCompile Include="html.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="load.cpp" />
     <ClCompile Include="Resource.cpp" />
