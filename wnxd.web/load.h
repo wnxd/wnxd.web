@@ -1,3 +1,11 @@
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::IO;
+using namespace System::Text;
+using namespace System::Web;
+using namespace System::Web::UI;
+using namespace System::Xml;
+
 namespace wnxd
 {
 	namespace Web
@@ -8,6 +16,9 @@ namespace wnxd
 			int _threshold = 200;
 			bool _jump = false, _refresh = false;
 			bool _SaveHtml();
+			static Load^ _FindFirst(Control^ control);
+			static Load^ _Find(Control^ control, String^ id);
+			static List<Load^>^ _Find(Control^ control);
 			ref class load_enter : Enter
 			{
 			protected:
@@ -25,6 +36,9 @@ namespace wnxd
 			Load();
 			void OnInit(EventArgs^ e) override;
 			void Render(HtmlTextWriter^ writer) override;
+			static Load^ FindFirst();
+			static Load^ Find(String^ id);
+			static array<Load^>^ Find();
 		};
 	}
 }

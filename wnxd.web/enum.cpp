@@ -1,5 +1,3 @@
-using namespace System;
-
 #include "enum.h"
 
 //class Enum<T>

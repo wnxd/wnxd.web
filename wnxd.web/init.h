@@ -1,3 +1,11 @@
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::IO;
+using namespace System::Reflection;
+using namespace System::Text::RegularExpressions;
+using namespace System::Web;
+using namespace System::Web::SessionState;
+
 namespace wnxd
 {
 	namespace Web
@@ -108,9 +116,9 @@ namespace wnxd
 			/// <summary>
 			/// 为当前 HTTP 请求获取 System.Web.SessionState.HttpSessionState 对象。
 			/// </summary>
-			property SessionState::HttpSessionState^ Session
+			property HttpSessionState^ Session
 			{
-				SessionState::HttpSessionState^ get();
+				HttpSessionState^ get();
 			}
 		public:
 			/// <summary>

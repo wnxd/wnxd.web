@@ -1,3 +1,5 @@
+using namespace System;
+
 namespace wnxd
 {
 	namespace Web

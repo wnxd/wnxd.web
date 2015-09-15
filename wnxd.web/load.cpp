@@ -1,11 +1,3 @@
-using namespace System;
-using namespace System::Collections::Generic;
-using namespace System::IO;
-using namespace System::Text;
-using namespace System::Web;
-using namespace System::Web::UI;
-using namespace System::Xml;
-
 #include "init.h"
 #include "load.h"
 #include "config.h"
@@ -63,6 +55,42 @@ bool Load::_SaveHtml()
 	}
 	return true;
 }
+Load^ Load::_FindFirst(Control^ control)
+{
+	if (!control->HasControls()) return nullptr;
+	for each(Control^ col in control->Controls) if (col->GetType() == Load::typeid) return (Load^)col;
+	for each(Control^ col in control->Controls)
+	{
+		Load^ load = _FindFirst(col);
+		if (load != nullptr) return load;
+	}
+	return nullptr;
+}
+Load^ Load::_Find(Control^ control, String^ id)
+{
+	if (!control->HasControls()) return nullptr;
+	Control^ col1 = control->FindControl(id);
+	if (col1 != nullptr && col1->GetType() == Load::typeid) return (Load^)col1;
+	for each(Control^ col2 in control->Controls)
+	{
+		Load^ load = _Find(col2, id);
+		if (load != nullptr) return load;
+	}
+	return nullptr;
+}
+List<Load^>^ Load::_Find(Control^ control)
+{
+	List<Load^>^ list = gcnew List<Load^>();
+	if (control->HasControls())
+	{
+		for each(Control^ col in control->Controls)
+		{
+			if (col->GetType() == Load::typeid) list->Add((Load^)col);
+			list->AddRange(_Find(col));
+		}
+	}
+	return list;
+}
 //public
 int Load::Threshold::get()
 {
@@ -118,6 +146,18 @@ void Load::Render(HtmlTextWriter^ writer)
 		sb->AppendFormat("<div id=\"{0}\" wnxd-load=\"{1}\" style=\"width: 100%; height: {1}px; background: #fff;\">{2}</div>", this->ClientID, this->_threshold, img_html);
 		writer->Write(sb->ToString());
 	}
+}
+Load^ Load::FindFirst()
+{
+	return _FindFirst((Control^)HttpContext::Current->CurrentHandler);
+}
+Load^ Load::Find(String^ id)
+{
+	return _Find((Control^)HttpContext::Current->CurrentHandler, id);
+}
+array<Load^>^ Load::Find()
+{
+	return _Find((Control^)HttpContext::Current->CurrentHandler)->ToArray();
 }
 //load_enter
 //protected

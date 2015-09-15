@@ -1,11 +1,3 @@
-using namespace System;
-using namespace System::Collections::Generic;
-using namespace System::Collections::Specialized;
-using namespace System::Linq;
-using namespace System::Text;
-using namespace System::Web;
-using namespace wnxd::javascript;
-
 #include "init.h"
 #include "cookie.h"
 #include "Resource.h"
