@@ -78,7 +78,6 @@
     <None Include="Resources\web.js">
       <Filter>Resources</Filter>
     </None>
-    <None Include="javascri.bin" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wnxd.web.rc">

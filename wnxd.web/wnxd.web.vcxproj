@@ -107,7 +107,6 @@
     <ClCompile Include="web.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="javascri.bin" />
     <None Include="Resources\cookie.js" />
     <None Include="Resources\load.js" />
     <None Include="Resources\web.js" />
