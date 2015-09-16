@@ -27,7 +27,7 @@ void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 {
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
 	json^ d = (json^)list[domain];
-	if (d->Value == js::undefined) d = gcnew json();
+	if (json::operator==(d, js::undefined)) d = gcnew json();
 	d->push(cookie);
 	list[domain] = d;
 }
@@ -43,7 +43,7 @@ void Cookie::cookie_enter::Application_BeginRequest()
 	if (this->Request->QueryString["wnxd_cookie"] == "sync")
 	{
 		json^ list = gcnew json(HttpUtility::UrlDecode(this->Request->QueryString["list"]));
-		if (list->Value != js::undefined)
+		if (json::operator!=(list, js::undefined))
 		{
 			for (int i = 0; i < list->length.Value; i++)
 			{
@@ -65,7 +65,7 @@ void Cookie::cookie_enter::Application_BeginRequest()
 }
 void Cookie::cookie_enter::Application_EndRequest()
 {
-	if (Cookie::list->Value != js::undefined)
+	if (json::operator!=(Cookie::list, js::undefined) && this->Response->StatusCode == 200)
 	{
 		this->Response->Write(String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", Cookie::list->ToString())));
 		Cookie::list = gcnew json();

@@ -1,33 +1,37 @@
 #include "Resource.h"
+#include <Windows.h>
 
 using namespace wnxd::Web;
-//internal
-System::Resources::ResourceManager^ Resource::ResourceManager::get()
+using namespace System::Reflection;
+using namespace System::Runtime::InteropServices;
+//class Resource
+//private
+System::String^ Resource::GetResource(int id)
 {
-	if (Object::ReferenceEquals(resourceMan, nullptr))
-	{
-		System::Resources::ResourceManager^ temp = gcnew System::Resources::ResourceManager("wnxd.Web.Resource", Resource::typeid->Assembly);
-		resourceMan = temp;
-	}
-	return resourceMan;
+	void* ptr = (void*)Marshal::StringToHGlobalAnsi(Assembly::GetExecutingAssembly()->ManifestModule->Name);
+	HMODULE hExe = GetModuleHandleA((LPCSTR)ptr);
+	HRSRC hRes = FindResource(hExe, MAKEINTRESOURCE(id), TEXT("JAVASCRIPT"));
+	if (hRes == NULL) return nullptr;
+	HGLOBAL hgRes = LoadResource(hExe, hRes);
+	LPVOID pRes = LockResource(hgRes);
+	DWORD nResSize = SizeofResource(hExe, hRes);
+	System::String^ s = Marshal::PtrToStringAnsi((System::IntPtr)pRes, nResSize);
+	FreeResource(hgRes);
+	return s;
 }
-System::Globalization::CultureInfo^ Resource::Culture::get()
+//public
+System::String^ Resource::cookie::get()
 {
-	return resourceCulture;
+	if (_cookie == nullptr) _cookie = GetResource(rc_cookie);
+	return _cookie;
 }
-void Resource::Culture::set(System::Globalization::CultureInfo^ value)
+System::String^ Resource::load::get()
 {
-	resourceCulture = value;
+	if (_load == nullptr) _load = GetResource(rc_load);
+	return _load;
 }
-String^ Resource::cookie::get()
+System::String^ Resource::web::get()
 {
-	return ResourceManager->GetString("cookie", resourceCulture);
-}
-String^ Resource::load::get()
-{
-	return ResourceManager->GetString("load", resourceCulture);
-}
-String^ Resource::web::get()
-{
-	return ResourceManager->GetString("web", resourceCulture);
+	if (_web == nullptr) _web = GetResource(rc_web);
+	return _web;
 }

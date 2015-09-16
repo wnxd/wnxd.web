@@ -107,12 +107,13 @@
     <ClCompile Include="web.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="javascri.bin" />
     <None Include="Resources\cookie.js" />
     <None Include="Resources\load.js" />
     <None Include="Resources\web.js" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resource.resx" />
+    <ResourceCompile Include="wnxd.web.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
