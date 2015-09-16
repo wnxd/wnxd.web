@@ -198,18 +198,6 @@ void Init::_init()
 				if (this->_old_app != nullptr)
 				{
 					this->_old_type = T;
-					T = HttpApplication::typeid;
-					try
-					{
-						FieldInfo^ fi = T->GetField("_context", all);
-						fi->SetValue(this->_old_app, this->Context);
-						fi = T->GetField("_state", all);
-						fi->SetValue(this->_old_app, this->Application);
-					}
-					catch (...)
-					{
-
-					}
 					break;
 				}
 			}
@@ -247,6 +235,18 @@ void Init::_callback(String^ method, array<Object^>^ parameters)
 		MethodInfo^ mi = this->_old_type->GetMethod(method, all);
 		if (mi != nullptr)
 		{
+			Type^ T = HttpApplication::typeid;
+			try
+			{
+				FieldInfo^ fi = T->GetField("_context", all);
+				fi->SetValue(this->_old_app, this->Context);
+				fi = T->GetField("_state", all);
+				fi->SetValue(this->_old_app, this->Application);
+			}
+			catch (...)
+			{
+
+			}
 			int len = mi->GetParameters()->Length;
 			if (len == 0) mi->Invoke(this->_old_app, nullptr);
 			else if (len == 2) mi->Invoke(this->_old_app, parameters);
