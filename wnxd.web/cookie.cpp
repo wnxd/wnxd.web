@@ -104,7 +104,7 @@ void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 			div = Html::FindControl(col, "html");
 			if (div == nullptr) div = col;
 		}
-		div->Controls->AddAt(0, script);
+		div->Controls->Add(script);
 		html = col->innerHTML;
 		this->Response->ClearContent();
 		this->Response->Write(html);
