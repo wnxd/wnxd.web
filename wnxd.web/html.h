@@ -1,3 +1,5 @@
+#include "enum.h"
+
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::IO;
@@ -175,6 +177,11 @@ namespace wnxd
 				String^ get() new;
 			}
 			property String^ type
+			{
+				String^ get();
+				void set(String^ value);
+			}
+			property String^ src
 			{
 				String^ get();
 				void set(String^ value);

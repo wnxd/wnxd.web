@@ -1,4 +1,3 @@
-#include "enum.h"
 #include "html.h"
 
 using namespace wnxd::Web;
@@ -949,6 +948,14 @@ String^ Script::type::get()
 void Script::type::set(String^ value)
 {
 	this->setAttribute("type", value);
+}
+String^ Script::src::get()
+{
+	return this->getAttribute("src");
+}
+void Script::src::set(String^ value)
+{
+	this->setAttribute("src", value);
 }
 //class A
 //public

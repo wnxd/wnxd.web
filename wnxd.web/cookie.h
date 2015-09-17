@@ -22,9 +22,11 @@ namespace wnxd
 		private:
 			ref class cookie_enter : Enter
 			{
+			private:
+				String^ HttpWriterRead(TextWriter^ hw, Encoding^ encoding);
 			protected:
 				void Application_BeginRequest() override;
-				void Application_EndRequest() override;
+				void Application_PostRequestHandlerExecute() override;
 			};
 		internal:
 			static json^ list = gcnew json();
