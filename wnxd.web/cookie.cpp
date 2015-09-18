@@ -28,6 +28,15 @@ void Cookie::Set(HttpCookie^ cookie, IList<String^>^ domains)
 void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 {
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
+	if (domain[domain->Length - 1] != '/') domain += '/';
+	Object^ session = HttpContext::Current->Session["wnxd_cookie"];
+	json^ list;
+	if (session == nullptr)
+	{
+		list = gcnew json();
+		HttpContext::Current->Session->Add("wnxd_cookie", list);
+	}
+	else list = (json^)session;
 	json^ d = (json^)list[domain];
 	if (json::operator==(d, js::undefined)) d = gcnew json();
 	d->push(cookie);
@@ -37,28 +46,28 @@ void Cookie::Sync(IList<String^>^ domains, HttpCookie^ cookie)
 {
 	for (int i = 0; i < domains->Count; i++) Sync(domains[i], cookie);
 }
-
 //class cookie_enter
 //private
 String^ Cookie::cookie_enter::HttpWriterRead(TextWriter^ hw, Encoding^ encoding)
 {
+	String^ str = String::Empty;
 	Type^ T = HttpWriter::typeid;
-	String^ str;
 	if (T->IsAssignableFrom(hw->GetType()))
 	{
 		BindingFlags all = BindingFlags::Instance | BindingFlags::Static | BindingFlags::Public | BindingFlags::NonPublic;
 		System::Collections::ArrayList^ arr = (System::Collections::ArrayList^)T->GetField("_buffers", all)->GetValue(hw);
 		if (arr->Count > 0)
 		{
-			MethodInfo^ mi = arr[0]->GetType()->GetMethod("GetBytes", all);
+			Assembly^ assembly = Assembly::Load("System.Web, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+			Type^ IHttpResponseElement = assembly->GetType("System.Web.IHttpResponseElement");
+			MethodInfo^ mi = IHttpResponseElement->GetMethod("GetBytes", all);
 			for (int i = 0; i < arr->Count; i++) str += encoding->GetString((array<Byte>^)mi->Invoke(arr[i], nullptr));
 		}
 		array<wchar_t>^ charBuffer = (array<wchar_t>^)T->GetField("_charBuffer", all)->GetValue(hw);
 		int charBufferLength = (int)T->GetField("_charBufferLength", all)->GetValue(hw);
 		int charBufferFree = (int)T->GetField("_charBufferFree", all)->GetValue(hw);
 		int len = charBufferLength - charBufferFree;
-		if (len == 0) str += gcnew String(charBuffer);
-		else str += gcnew String(charBuffer, 0, len);
+		if (len > 0) str += gcnew String(charBuffer, 0, len);
 	}
 	return str;
 }
@@ -70,44 +79,46 @@ void Cookie::cookie_enter::Application_BeginRequest()
 		json^ list = gcnew json(HttpUtility::UrlDecode(this->Request->QueryString["list"]));
 		if (json::operator!=(list, js::undefined))
 		{
-			for (int i = 0; i < list->length.Value; i++)
-			{
-				json^ c = (json^)list[i];
-				HttpCookie^ cc = gcnew HttpCookie((String^)c["Name"], (String^)c["Value"]);
-				cc->Domain = (String^)c["Domain"];
-				cc->Expires = (DateTime)c["Expires"];
-				cc->HttpOnly = (bool)c["HttpOnly"];
-				cc->Path = (String^)c["Path"];
-				cc->Secure = (bool)c["Secure"];
-				NameValueCollection^ nvc = (NameValueCollection^)c["Values"];
-				if (nvc != nullptr) cc->Values->Add(nvc);
-				this->Response->AppendCookie(cc);
-			}
+			HttpCookie^ cc = gcnew HttpCookie((String^)list["Name"], (String^)list["Value"]);
+			cc->Domain = (String^)list["Domain"];
+			cc->Expires = (DateTime)list["Expires"];
+			cc->HttpOnly = (bool)list["HttpOnly"];
+			cc->Path = (String^)list["Path"];
+			cc->Secure = (bool)list["Secure"];
+			NameValueCollection^ nvc = (NameValueCollection^)list["Values"];
+			if (nvc != nullptr) cc->Values->Add(nvc);
+			this->Response->AppendCookie(cc);
 			this->Response->AddHeader("P3P", "CP=NON DSP COR CURa ADMa DEVa TAIa PSAa PSDa IVAa IVDa CONa HISa TELa OTPa OUR UNRa IND UNI COM NAV INT DEM CNT PRE LOC");
 		}
+		this->Response->Write("wnxd.SyncCookieCallbak();");
 		this->Response->End();
 	}
 }
 void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 {
-	if (json::operator!=(Cookie::list, js::undefined) && this->Response->StatusCode == 200)
+	Object^ session = HttpContext::Current->Session["wnxd_cookie"];
+	if (session != nullptr)
 	{
-		String^ html = this->HttpWriterRead(this->Response->Output, this->Response->ContentEncoding);
-		Html^ col = gcnew Html();
-		Script^ script = gcnew Script();
-		script->type = "text/javascript";
-		script->Controls->Add(gcnew LiteralControl(Resource::cookie->Replace("$$$", Cookie::list->ToString())));
-		col->innerHTML = html;
-		Html^ div = Html::FindControl(col, "head");
-		if (div == nullptr)
+		if (this->Response->StatusCode == 200)
 		{
-			div = Html::FindControl(col, "html");
-			if (div == nullptr) div = col;
+			String^ html = this->HttpWriterRead(this->Response->Output, this->Response->ContentEncoding);
+			String^ script = String::Empty;
+			int count = 0;
+			for each (KeyValuePair<String^, json^> kv in (json^)session) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" src=\"{0}?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
+			script = String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString())) + script;
+			Html^ col = gcnew Html();
+			col->innerHTML = html;
+			Html^ div = Html::FindControl(col, "head");
+			if (div == nullptr)
+			{
+				div = Html::FindControl(col, "html");
+				if (div == nullptr) div = col;
+			}
+			div->Controls->AddAt(0, gcnew LiteralControl(script));
+			html = col->innerHTML;
+			this->Response->ClearContent();
+			this->Response->Write(html);
+			HttpContext::Current->Session->Remove("wnxd_cookie");
 		}
-		div->Controls->Add(script);
-		html = col->innerHTML;
-		this->Response->ClearContent();
-		this->Response->Write(html);
-		Cookie::list = gcnew json();
 	}
 }

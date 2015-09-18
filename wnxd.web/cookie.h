@@ -28,8 +28,6 @@ namespace wnxd
 				void Application_BeginRequest() override;
 				void Application_PostRequestHandlerExecute() override;
 			};
-		internal:
-			static json^ list = gcnew json();
 		public:
 			/// <summary>
 			/// 用于触发cookie的入口类注册
