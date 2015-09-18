@@ -104,8 +104,8 @@ void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 			String^ html = this->HttpWriterRead(this->Response->Output, this->Response->ContentEncoding);
 			String^ script = String::Empty;
 			int count = 0;
-			for each (KeyValuePair<String^, json^> kv in (json^)session) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" src=\"{0}?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
-			script = String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString())) + script;
+			for each (KeyValuePair<String^, json^> kv in (json^)session) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" wnxd_cookie=\"{0}?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
+			script += String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString()));
 			Html^ col = gcnew Html();
 			col->innerHTML = html;
 			Html^ div = Html::FindControl(col, "head");
