@@ -101,13 +101,58 @@ namespace wnxd
 			void Render(HtmlTextWriter^ writer) override;
 			String^ ToString() override;
 			String^ GetType() new;
+			/// <summary>
+			/// 设置当前控件的html代码
+			/// </summary>
+			/// <param name="control"></param>
+			/// <param name="html"></param>
 			static void SetInnerHTML(Control^ control, String^ html);
+			/// <summary>
+			/// 获取当前控件的html代码
+			/// </summary>
+			/// <param name="control"></param>
+			/// <returns></returns>
 			static String^ GetInnerHTML(Control^ control);
+			/// <summary>
+			/// 把当前控件的子控件用html标签的形式重构
+			/// </summary>
+			/// <param name="control"></param>
 			static void Reconstruction(Control^ control);
+			/// <summary>
+			/// 在当前控件中按CSS选择语法来查询子控件,该方法会触发Reconstruction进行重构
+			/// </summary>
+			/// <param name="control"></param>
+			/// <param name="query">查询语句</param>
+			/// <returns></returns>
 			static Html^ FindControl(Control^ control, String^ query);
+			/// <summary>
+			/// 在当前控件中按指定的查询方式查询子控件,该方法会触发Reconstruction进行重构
+			/// </summary>
+			/// <param name="control"></param>
+			/// <param name="query">查询语句</param>
+			/// <param name="querytype">查询方式</param>
+			/// <returns></returns>
 			static Html^ FindControl(Control^ control, String^ query, QueryType querytype);
+			/// <summary>
+			/// 在当前控件中按CSS选择语法来查询子控件,该方法会触发Reconstruction进行重构
+			/// </summary>
+			/// <param name="control"></param>
+			/// <param name="selectors">查询语句</param>
+			/// <returns></returns>
 			static Html^ querySelector(Control^ control, String^ selectors);
+			/// <summary>
+			/// 在当前控件中用正则表达式来查询子控件,该方法会触发Reconstruction进行重构
+			/// </summary>
+			/// <param name="control"></param>
+			/// <param name="pattern">正则表达式语句</param>
+			/// <returns></returns>
 			static Html^ queryRegExp(Control^ control, String^ pattern);
+			/// <summary>
+			/// 在当前控件中用正则表达式来查询子控件,该方法会触发Reconstruction进行重构
+			/// </summary>
+			/// <param name="control"></param>
+			/// <param name="regex">正则表达式</param>
+			/// <returns></returns>
 			static Html^ queryRegExp(Control^ control, Regex^ regex);
 		};
 		public ref class Img : Html
