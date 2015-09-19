@@ -1,4 +1,3 @@
-#include "init.h"
 #include "cookie.h"
 #include "Resource.h"
 #include "html.h"

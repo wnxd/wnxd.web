@@ -1,3 +1,5 @@
+#include "init.h"
+
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Collections::Specialized;
