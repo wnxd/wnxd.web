@@ -28,7 +28,7 @@ void Cookie::Set(HttpCookie^ cookie, IList<String^>^ domains)
 void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 {
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
-	if (domain[domain->Length - 1] != '/') domain += '/';
+	if (domain[domain->Length - 1] != '/') domain += "/";
 	Object^ session = HttpContext::Current->Session["wnxd_cookie"];
 	json^ list;
 	if (session == nullptr)

@@ -1,4 +1,3 @@
-#include "init.h"
 #include "load.h"
 #include "config.h"
 #include "Resource.h"

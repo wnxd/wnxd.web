@@ -1,4 +1,5 @@
 #include "html.h"
+#include "web.h"
 
 using namespace wnxd::Web;
 //class Html
@@ -606,6 +607,8 @@ void Html::Reconstruction(Control^ control)
 {
 	if (control->HasControls())
 	{
+		array<Web^>^ list = Web::Find();
+		for (int i = 0; i < list->Length; i++) list[i]->OnLoad(nullptr);
 		for (int i = 0; i < control->Controls->Count; i++) if (Html::typeid->IsAssignableFrom(control->Controls[i]->GetType())) return;
 		String^ html = GetInnerHTML(control);
 		control->Controls->Clear();
