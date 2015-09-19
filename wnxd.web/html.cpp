@@ -10,8 +10,7 @@ Html::~Html()
 //private
 void Html::List_Add(List<Object^>^ target, Object^ item)
 {
-	array<Object^>^ args = { target, item };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, item);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -25,8 +24,7 @@ void Html::List_Add(List<Object^>^ target, Object^ item)
 }
 void Html::List_AddRange(List<Object^>^ target, IEnumerable<Object^>^ collection)
 {
-	array<Object^>^ args = { target, collection };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, collection);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -40,8 +38,7 @@ void Html::List_AddRange(List<Object^>^ target, IEnumerable<Object^>^ collection
 }
 void Html::List_Item_set(List<Object^>^ target, int index, Object^ item)
 {
-	array<Object^>^ args = { target, index, item };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, index, item);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -55,8 +52,7 @@ void Html::List_Item_set(List<Object^>^ target, int index, Object^ item)
 }
 void Html::List_Insert(List<Object^>^ target, int index, Object^ item)
 {
-	array<Object^>^ args = { target, index, item };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, index, item);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -70,8 +66,7 @@ void Html::List_Insert(List<Object^>^ target, int index, Object^ item)
 }
 void Html::List_InsertRange(List<Object^>^ target, int index, IEnumerable<Object^>^ collection)
 {
-	array<Object^>^ args = { target, index, collection };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, index, collection);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -85,8 +80,7 @@ void Html::List_InsertRange(List<Object^>^ target, int index, IEnumerable<Object
 }
 bool Html::List_Remove(List<Object^>^ target, Object^ item)
 {
-	array<Object^>^ args = { target, item };
-	bool r = Hook::Source->Run<bool>(args);
+	bool r = Hook::Source->Run<bool>(target, item);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -101,8 +95,7 @@ bool Html::List_Remove(List<Object^>^ target, Object^ item)
 }
 int Html::List_RemoveAll(List<Object^>^ target, Predicate<Object^>^ match)
 {
-	array<Object^>^ args = { target, match };
-	int r = Hook::Source->Run<int>(args);
+	int r = Hook::Source->Run<int>(target, match);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -117,8 +110,7 @@ int Html::List_RemoveAll(List<Object^>^ target, Predicate<Object^>^ match)
 }
 void Html::List_RemoveAt(List<Object^>^ target, int index)
 {
-	array<Object^>^ args = { target, index };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, index);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -132,8 +124,7 @@ void Html::List_RemoveAt(List<Object^>^ target, int index)
 }
 void Html::List_RemoveRange(List<Object^>^ target, int index, int count)
 {
-	array<Object^>^ args = { target, index, count };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, index, count);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -147,8 +138,7 @@ void Html::List_RemoveRange(List<Object^>^ target, int index, int count)
 }
 void Html::List_Clear(List<Object^>^ target)
 {
-	array<Object^>^ args = { target };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target);
 	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
 		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
 		{
@@ -162,8 +152,7 @@ void Html::List_Clear(List<Object^>^ target)
 }
 void Html::Dictionary_Add(Dictionary<Object^, Object^>^ target, Object^ key, Object^ value)
 {
-	array<Object^>^ args = { target, key, value };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, key, value);
 	array<Type^>^ ga = target->GetType()->GetGenericArguments();
 	if (ga[0] == String::typeid && ga[1] == String::typeid)
 	{
@@ -179,8 +168,7 @@ void Html::Dictionary_Add(Dictionary<Object^, Object^>^ target, Object^ key, Obj
 }
 void Html::Dictionary_Item_set(Dictionary<Object^, Object^>^ target, Object^ key, Object^ value)
 {
-	array<Object^>^ args = { target, key, value };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, key, value);
 	array<Type^>^ ga = target->GetType()->GetGenericArguments();
 	if (ga[0] == String::typeid && ga[1] == String::typeid)
 	{
@@ -196,8 +184,7 @@ void Html::Dictionary_Item_set(Dictionary<Object^, Object^>^ target, Object^ key
 }
 void Html::Dictionary_Remove(Dictionary<Object^, Object^>^ target, Object^ key)
 {
-	array<Object^>^ args = { target, key };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target, key);
 	array<Type^>^ ga = target->GetType()->GetGenericArguments();
 	if (ga[0] == String::typeid && ga[1] == String::typeid)
 	{
@@ -213,8 +200,7 @@ void Html::Dictionary_Remove(Dictionary<Object^, Object^>^ target, Object^ key)
 }
 void Html::Dictionary_Clear(Dictionary<Object^, Object^>^ target)
 {
-	array<Object^>^ args = { target };
-	Hook::Source->Run(args);
+	Hook::Source->Run(target);
 	array<Type^>^ ga = target->GetType()->GetGenericArguments();
 	if (ga[0] == String::typeid && ga[1] == String::typeid)
 	{
