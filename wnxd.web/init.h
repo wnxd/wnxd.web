@@ -172,7 +172,7 @@ namespace wnxd
 			Object^ _old_app;
 			Type^ _old_type;
 			void _init();
-			void _callback(String^ method, array<Object^>^ parameters);
+			void _callback(String^ method, ...array<Object^>^ parameters);
 			void Application_Start(Object^ sender, EventArgs^ e);
 			void Application_End(Object^ sender, EventArgs^ e);
 			void Application_Error(Object^ sender, EventArgs^ e);

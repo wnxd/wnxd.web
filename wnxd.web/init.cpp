@@ -227,7 +227,7 @@ void Init::_init()
 		}
 	}
 }
-void Init::_callback(String^ method, array<Object^>^ parameters)
+void Init::_callback(String^ method, ...array<Object^>^ parameters)
 {
 	BindingFlags all = BindingFlags::Instance | BindingFlags::Static | BindingFlags::Public | BindingFlags::NonPublic;
 	if (this->_old_app != nullptr)
@@ -260,98 +260,80 @@ void Init::_callback(String^ method, array<Object^>^ parameters)
 }
 void Init::Application_Start(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_Start", args);
+	this->_callback("Application_Start", sender, e);
 }
 void Init::Application_End(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_End", args);
+	this->_callback("Application_End", sender, e);
 }
 void Init::Application_Error(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_Error", args);
+	this->_callback("Application_Error", sender, e);
 }
 void Init::Application_BeginRequest(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_BeginRequest", args);
+	this->_callback("Application_BeginRequest", sender, e);
 }
 void Init::Application_AuthenticateRequest(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_AuthenticateRequest", args);
+	this->_callback("Application_AuthenticateRequest", sender, e);
 }
 void Init::Application_AuthorizeRequest(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_AuthorizeRequest", args);
+	this->_callback("Application_AuthorizeRequest", sender, e);
 }
 void Init::Application_ResolveRequestCache(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_ResolveRequestCache", args);
+	this->_callback("Application_ResolveRequestCache", sender, e);
 }
 void Init::Application_AcquireRequestState(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_AcquireRequestState", args);
+	this->_callback("Application_AcquireRequestState", sender, e);
 }
 void Init::Application_PreRequestHandlerExecute(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_PreRequestHandlerExecute", args);
+	this->_callback("Application_PreRequestHandlerExecute", sender, e);
 }
 void Init::Application_PostRequestHandlerExecute(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_PostRequestHandlerExecute", args);
+	this->_callback("Application_PostRequestHandlerExecute", sender, e);
 }
 void Init::Application_ReleaseRequestState(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_ReleaseRequestState", args);
+	this->_callback("Application_ReleaseRequestState", sender, e);
 }
 void Init::Application_UpdateRequestCache(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_UpdateRequestCache", args);
+	this->_callback("Application_UpdateRequestCache", sender, e);
 }
 void Init::Application_EndRequest(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_EndRequest", args);
+	this->_callback("Application_EndRequest", sender, e);
 }
 void Init::Application_PreSendRequestHeaders(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_PreSendRequestHeaders", args);
+	this->_callback("Application_PreSendRequestHeaders", sender, e);
 }
 void Init::Application_PreSendRequestContent(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_PreSendRequestContent", args);
+	this->_callback("Application_PreSendRequestContent", sender, e);
 }
 void Init::Session_Start(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Session_Start", args);
+	this->_callback("Session_Start", sender, e);
 }
 void Init::Session_End(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Session_End", args);
+	this->_callback("Session_End", sender, e);
 }
 void Init::Application_Disposed(Object^ sender, EventArgs^ e)
 {
-	array<Object^>^ args = { sender, e };
-	this->_callback("Application_Disposed", args);
+	this->_callback("Application_Disposed", sender, e);
 }
 //protected
 Init::Init()
 {
 	if (this->GetType()->FullName != "ASP.global_asax") throw gcnew TypeLoadException("<wnxd.web.init>是特殊类无法被继承");
 	this->_init();
-	this->_callback("Initialize", nullptr);
+	this->_callback("Initialize");
 }
