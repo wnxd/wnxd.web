@@ -2,6 +2,8 @@
 #include "web.h"
 
 using namespace wnxd::Web;
+using namespace System::IO;
+using namespace System::Reflection;
 //class Html
 Html::~Html()
 {

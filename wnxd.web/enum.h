@@ -1,5 +1,3 @@
-using namespace System;
-
 namespace wnxd
 {
 	namespace Enum

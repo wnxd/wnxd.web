@@ -1,6 +1,9 @@
 #include "config.h"
 
 using namespace wnxd::Config;
+using namespace System::IO;
+using namespace System::Xml;
+using namespace System::Text;
 //class config
 //public
 config::config(String^ path)

@@ -1,5 +1,8 @@
 #include "web.h"
 #include "Resource.h"
+
+using namespace System::Reflection;
+using namespace System::Web;
 //private
 wnxd::Web::Web^ wnxd::Web::Web::_FindFirst(Control^ control)
 {

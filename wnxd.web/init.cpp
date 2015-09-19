@@ -3,6 +3,9 @@
 
 using namespace wnxd::Web;
 using namespace wnxd::Config;
+using namespace System::Text::RegularExpressions;
+using namespace System::Reflection;
+using namespace System::IO;
 //class Enter
 //protected
 void Enter::Initialize()

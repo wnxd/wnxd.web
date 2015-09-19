@@ -4,6 +4,9 @@
 
 using namespace wnxd::Web;
 using namespace wnxd::Config;
+using namespace System::Xml;
+using namespace System::Text;
+using namespace System::IO;
 //class Load
 //private
 bool Load::_SaveHtml()

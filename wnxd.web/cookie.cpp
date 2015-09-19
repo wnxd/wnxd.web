@@ -3,7 +3,9 @@
 #include "html.h"
 
 using namespace wnxd::Web;
-using namespace System::Web::UI;
+using namespace wnxd::javascript;
+using namespace System::Collections::Specialized;
+using namespace System::Reflection;
 //class Cookie
 //public
 void Cookie::Init()
