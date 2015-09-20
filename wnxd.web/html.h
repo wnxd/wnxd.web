@@ -4,7 +4,6 @@ using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Text::RegularExpressions;
 using namespace System::Web::UI;
-using namespace wnxd::Asm;
 using namespace wnxd::Enum;
 
 namespace wnxd
@@ -13,31 +12,38 @@ namespace wnxd
 	{
 		public ref class Html : Control
 		{
-			static Html()
-			{
-				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "Add"), Hook::GetMethod(Html::typeid, "Dictionary_Add"));
-				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "set_Item"), Hook::GetMethod(Html::typeid, "Dictionary_Item_set"));
-				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "Remove"), Hook::GetMethod(Html::typeid, "Dictionary_Remove"));
-				Hook::Register(Hook::GetMethod(Dictionary<String^, String^>::typeid, "Clear"), Hook::GetMethod(Html::typeid, "Dictionary_Clear"));
-			}
-			~Html();
 		private:
-			static IDictionary<Html^, IList<String^>^>^ List_hooklist = gcnew Dictionary<Html^, IList<String^>^>();
-			static IDictionary<Html^, IDictionary<String^, String^>^>^ Dictionary_hooklist = gcnew Dictionary<Html^, IDictionary<String^, String^>^>();
-			static void List_Add(List<Object^>^ target, Object^ item);
-			static void List_AddRange(List<Object^>^ target, IEnumerable<Object^>^ collection);
-			static void List_Item_set(List<Object^>^ target, int index, Object^ item);
-			static void List_Insert(List<Object^>^ target, int index, Object^ item);
-			static void List_InsertRange(List<Object^>^ target, int index, IEnumerable<Object^>^ collection);
-			static bool List_Remove(List<Object^>^ target, Object^ item);
-			static int List_RemoveAll(List<Object^>^ target, Predicate<Object^>^ match);
-			static void List_RemoveAt(List<Object^>^ target, int index);
-			static void List_RemoveRange(List<Object^>^ target, int index, int count);
-			static void List_Clear(List<Object^>^ target);
-			static void Dictionary_Add(Dictionary<Object^, Object^>^ target, Object^ key, Object^ value);
-			static void Dictionary_Item_set(Dictionary<Object^, Object^>^ target, Object^ key, Object^ value);
-			static void Dictionary_Remove(Dictionary<Object^, Object^>^ target, Object^ key);
-			static void Dictionary_Clear(Dictionary<Object^, Object^>^ target);
+			ref class List : System::Collections::Generic::List < String^ >
+			{
+			internal:
+				event Action<IList<String^>^>^ Changed;
+			public:
+				virtual void Add(String^ item) new = IList<String^>::Add;
+				virtual void Insert(int index, String^ item) new = IList<String^>::Insert;
+				virtual bool Remove(String^ item) new = IList<String^>::Remove;
+				virtual void RemoveAt(int index) new = IList<String^>::RemoveAt;
+				virtual void Clear() new = IList<String^>::Clear;
+				property String^ default[int]
+				{
+					virtual void set(int index, String^ value) new = IList<String^>::default::set;
+				}
+
+			};
+			ref class Dictionary : System::Collections::Generic::Dictionary < String^, String^ >
+			{
+			internal:
+				event Action^ Changed;
+			public:
+				Dictionary(IDictionary<String^, String^>^ dictionary) : System::Collections::Generic::Dictionary<String^, String^>(dictionary) { }
+				Dictionary(IEqualityComparer<String^>^ comparer) : System::Collections::Generic::Dictionary<String^, String^>(comparer) { }
+				virtual void Add(String^ key, String^ value) new = IDictionary<String^, String^>::Add;
+				virtual bool Remove(String^ key) new = IDictionary<String^, String^>::Remove;
+				virtual void Clear() new = IDictionary<String^, String^>::Clear;
+				property String^ default[String^]
+				{
+					virtual void set(String^ key, String^ value) new = IDictionary<String^, String^>::default::set;
+				}
+			};
 			static void AddText(Control^ control, String^ text);
 			static int Contains(MatchCollection^ MatchList, int Index);
 			static String^ Render(Control^ control);
@@ -45,7 +51,7 @@ namespace wnxd
 			static Control^ _queryRegExp(Control^ control, Regex^ regex);
 		internal:
 			String^ _head, ^_foot, ^_tagName;
-			Dictionary<String^, String^>^ _attributes;
+			Dictionary^ _attributes;
 			static void EnsureChildControls(Control^ control);
 		protected:
 			void Refresh();

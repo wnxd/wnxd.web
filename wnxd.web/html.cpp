@@ -5,218 +5,7 @@ using namespace wnxd::Web;
 using namespace System::IO;
 using namespace System::Reflection;
 //class Html
-Html::~Html()
-{
-	if (List_hooklist->ContainsKey(this)) List_hooklist->Remove(this);
-	if (Dictionary_hooklist->ContainsKey(this)) Dictionary_hooklist->Remove(this);
-}
 //private
-void Html::List_Add(List<Object^>^ target, Object^ item)
-{
-	Hook::Source->Run(target, item);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::List_AddRange(List<Object^>^ target, IEnumerable<Object^>^ collection)
-{
-	Hook::Source->Run(target, collection);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::List_Item_set(List<Object^>^ target, int index, Object^ item)
-{
-	Hook::Source->Run(target, index, item);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::List_Insert(List<Object^>^ target, int index, Object^ item)
-{
-	Hook::Source->Run(target, index, item);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::List_InsertRange(List<Object^>^ target, int index, IEnumerable<Object^>^ collection)
-{
-	Hook::Source->Run(target, index, collection);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-bool Html::List_Remove(List<Object^>^ target, Object^ item)
-{
-	bool r = Hook::Source->Run<bool>(target, item);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-	return r;
-}
-int Html::List_RemoveAll(List<Object^>^ target, Predicate<Object^>^ match)
-{
-	int r = Hook::Source->Run<int>(target, match);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-	return r;
-}
-void Html::List_RemoveAt(List<Object^>^ target, int index)
-{
-	Hook::Source->Run(target, index);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::List_RemoveRange(List<Object^>^ target, int index, int count)
-{
-	Hook::Source->Run(target, index, count);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::List_Clear(List<Object^>^ target)
-{
-	Hook::Source->Run(target);
-	if (target->GetType()->GetGenericArguments()[0] == String::typeid){
-		for each(KeyValuePair<Html^, IList<String^>^> kv in List_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->classList = (List<String^>^)target;
-				break;
-			}
-		}
-	}
-}
-void Html::Dictionary_Add(Dictionary<Object^, Object^>^ target, Object^ key, Object^ value)
-{
-	Hook::Source->Run(target, key, value);
-	array<Type^>^ ga = target->GetType()->GetGenericArguments();
-	if (ga[0] == String::typeid && ga[1] == String::typeid)
-	{
-		for each(KeyValuePair<Html^, IDictionary<String^, String^>^> kv in Dictionary_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->Refresh();
-				break;
-			}
-		}
-	}
-}
-void Html::Dictionary_Item_set(Dictionary<Object^, Object^>^ target, Object^ key, Object^ value)
-{
-	Hook::Source->Run(target, key, value);
-	array<Type^>^ ga = target->GetType()->GetGenericArguments();
-	if (ga[0] == String::typeid && ga[1] == String::typeid)
-	{
-		for each(KeyValuePair<Html^, IDictionary<String^, String^>^> kv in Dictionary_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->Refresh();
-				break;
-			}
-		}
-	}
-}
-void Html::Dictionary_Remove(Dictionary<Object^, Object^>^ target, Object^ key)
-{
-	Hook::Source->Run(target, key);
-	array<Type^>^ ga = target->GetType()->GetGenericArguments();
-	if (ga[0] == String::typeid && ga[1] == String::typeid)
-	{
-		for each(KeyValuePair<Html^, IDictionary<String^, String^>^> kv in Dictionary_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->Refresh();
-				break;
-			}
-		}
-	}
-}
-void Html::Dictionary_Clear(Dictionary<Object^, Object^>^ target)
-{
-	Hook::Source->Run(target);
-	array<Type^>^ ga = target->GetType()->GetGenericArguments();
-	if (ga[0] == String::typeid && ga[1] == String::typeid)
-	{
-		for each(KeyValuePair<Html^, IDictionary<String^, String^>^> kv in Dictionary_hooklist)
-		{
-			if (kv.Value->Equals(target))
-			{
-				kv.Key->Refresh();
-				break;
-			}
-		}
-	}
-}
 void Html::AddText(Control^ control, String^ text)
 {
 	if (control->Controls->Count > 0 && control->Controls[control->Controls->Count - 1]->GetType() == LiteralControl::typeid) ((LiteralControl^)control->Controls[control->Controls->Count - 1])->Text += text;
@@ -359,35 +148,14 @@ void Html::className::set(String^ value)
 }
 IList<String^>^ Html::classList::get()
 {
-	List<String^>^ list = gcnew List<String^>();
+	List^ list = gcnew List();
 	String^ className = this->className;
 	if (className != nullptr) if (className != String::Empty) list->AddRange(className->Split(' '));
-	if (List_hooklist->ContainsKey(this)) List_hooklist[this] = list;
-	else List_hooklist->Add(this, list);
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Add"), Hook::GetMethod(Html::typeid, "List_Add"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "AddRange"), Hook::GetMethod(Html::typeid, "List_AddRange"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "set_Item"), Hook::GetMethod(Html::typeid, "List_Item_set"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Insert"), Hook::GetMethod(Html::typeid, "List_Insert"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "InsertRange"), Hook::GetMethod(Html::typeid, "List_InsertRange"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Remove"), Hook::GetMethod(Html::typeid, "List_Remove"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveAll"), Hook::GetMethod(Html::typeid, "List_RemoveAll"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveAt"), Hook::GetMethod(Html::typeid, "List_RemoveAt"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "RemoveRange"), Hook::GetMethod(Html::typeid, "List_RemoveRange"));
-	Hook::Register(Hook::GetMethod(List<String^>::typeid, "Clear"), Hook::GetMethod(Html::typeid, "List_Clear"));
+	list->Changed += gcnew Action<IList<String^>^>(this, &Html::classList::set);
 	return list;
 }
 void Html::classList::set(IList<String^>^ value)
 {
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Add"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "AddRange"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "set_Item"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Insert"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "InsertRange"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Remove"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "RemoveAll"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "RemoveAt"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "RemoveRange"));
-	Hook::Unregister(Hook::GetMethod(List<String^>::typeid, "Clear"));
 	IDictionary<String^, String^>^ attr = this->attributes;
 	if (value == nullptr) { if (attr != nullptr) attr->Remove("class"); }
 	else
@@ -432,7 +200,7 @@ IDictionary<String^, String^>^ Html::attributes::get()
 {
 	if (this->_attributes == nullptr)
 	{
-		this->_attributes = gcnew Dictionary<String^, String^>(StringComparer::OrdinalIgnoreCase);
+		this->_attributes = gcnew Dictionary(StringComparer::OrdinalIgnoreCase);
 		MatchCollection^ mc = (gcnew Regex("(\\w+)(?:=['\"]([\\s\\S]*?)['\"])?"))->Matches(this->_head);
 		if (mc != nullptr && mc->Count > 0)
 		{
@@ -447,16 +215,14 @@ IDictionary<String^, String^>^ Html::attributes::get()
 				}
 			}
 		}
-		if (Dictionary_hooklist->ContainsKey(this)) Dictionary_hooklist[this] = this->_attributes;
-		else Dictionary_hooklist->Add(this, this->_attributes);
+		this->_attributes->Changed += gcnew Action(this, &Html::Refresh);
 	}
 	return this->_attributes;
 }
 void Html::attributes::set(IDictionary<String^, String^>^ value)
 {
-	this->_attributes = gcnew Dictionary<String^, String^>(value);
-	if (Dictionary_hooklist->ContainsKey(this)) Dictionary_hooklist[this] = this->_attributes;
-	else Dictionary_hooklist->Add(this, this->_attributes);
+	this->_attributes = gcnew Dictionary(value);
+	this->_attributes->Changed += gcnew Action(this, &Html::Refresh);
 	this->Refresh();
 }
 String^ Html::innerHTML::get()
@@ -651,9 +417,9 @@ Html^ Html::querySelector(Control^ control, String^ selectors)
 		if (selectors != String::Empty)
 		{
 			String^ TagName = String::Empty, ^ClassName = String::Empty, ^ID = String::Empty, ^Attr_Key = String::Empty, ^Attr_Val = String::Empty;
-			IList<String^>^ ClassNameList = gcnew List<String^>();
+			IList<String^>^ ClassNameList = gcnew System::Collections::Generic::List<String^>();
 			bool _ID = false;
-			IDictionary<String^, String^>^ Attr = gcnew Dictionary<String^, String^>();
+			IDictionary<String^, String^>^ Attr = gcnew System::Collections::Generic::Dictionary<String^, String^>();
 			querySelector_Status flag = querySelector_Status::TagName;
 			for (int i = 0; i < selectors->Length; i++)
 			{
@@ -981,4 +747,60 @@ String^ A::target::get()
 void A::target::set(String^ value)
 {
 	this->setAttribute("target", value);
+}
+//class List
+//public
+void Html::List::Add(String^ item)
+{
+	this->System::Collections::Generic::List<String^>::Add(item);
+	this->Changed(this);
+}
+void Html::List::Insert(int index, String^ item)
+{
+	this->System::Collections::Generic::List<String^>::Insert(index, item);
+	this->Changed(this);
+}
+bool Html::List::Remove(String^ item)
+{
+	bool r = this->System::Collections::Generic::List<String^>::Remove(item);
+	this->Changed(this);
+	return r;
+}
+void Html::List::RemoveAt(int index)
+{
+	this->System::Collections::Generic::List<String^>::RemoveAt(index);
+	this->Changed(this);
+}
+void Html::List::Clear()
+{
+	this->System::Collections::Generic::List<String^>::Clear();
+	this->Changed(this);
+}
+void Html::List::default::set(int index, String^ value)
+{
+	this->System::Collections::Generic::List<String^>::default::set(index, value);
+	this->Changed(this);
+}
+//class Dictionary
+//public
+void Html::Dictionary::Add(String^ key, String^ value)
+{
+	this->System::Collections::Generic::Dictionary<String^, String^>::Add(key, value);
+	this->Changed();
+}
+bool Html::Dictionary::Remove(String^ key)
+{
+	bool r = this->System::Collections::Generic::Dictionary<String^, String^>::Remove(key);
+	this->Changed();
+	return r;
+}
+void Html::Dictionary::Clear()
+{
+	this->System::Collections::Generic::Dictionary<String^, String^>::Clear();
+	this->Changed();
+}
+void Html::Dictionary::default::set(String^ key, String^ value)
+{
+	this->System::Collections::Generic::Dictionary<String^, String^>::default::set(key, value);
+	this->Changed();
 }
