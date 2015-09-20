@@ -52,9 +52,9 @@ void Cookie::Sync(IList<String^>^ domains, HttpCookie^ cookie)
 String^ Cookie::cookie_enter::HttpWriterRead(TextWriter^ hw, Encoding^ encoding)
 {
 	String^ str = String::Empty;
-	Type^ T = HttpWriter::typeid;
-	if (T->IsAssignableFrom(hw->GetType()))
+	if (dynamic_cast<HttpWriter^>(hw))
 	{
+		Type^ T = HttpWriter::typeid;
 		BindingFlags all = BindingFlags::Instance | BindingFlags::Static | BindingFlags::Public | BindingFlags::NonPublic;
 		System::Collections::ArrayList^ arr = (System::Collections::ArrayList^)T->GetField("_buffers", all)->GetValue(hw);
 		if (arr->Count > 0)
@@ -103,7 +103,7 @@ void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 			String^ html = this->HttpWriterRead(this->Response->Output, this->Response->ContentEncoding);
 			String^ script = String::Empty;
 			int count = 0;
-			for each (KeyValuePair<String^, json^> kv in (json^)session) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" wnxd_cookie=\"{0}?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
+			for each (KeyValuePair<String^, json^> kv in (json^)session) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" wnxd_cookie=\"{0}wnxd.aspx?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
 			script += String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString()));
 			Html^ col = gcnew Html();
 			col->innerHTML = html;

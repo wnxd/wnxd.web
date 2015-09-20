@@ -42,7 +42,7 @@ Control^ Html::_querySelector(Control^ control, String^ TagName, IList<String^>^
 	TagName = TagName->ToLower();
 	for (int i = 0; i < control->Controls->Count; i++)
 	{
-		if (Html::typeid->IsAssignableFrom(control->Controls[i]->GetType()))
+		if (dynamic_cast<Html^>(control->Controls[i]))
 		{
 			Html^ child = (Html^)control->Controls[i];
 			if (!String::IsNullOrEmpty(TagName) && child->tagName != TagName) goto FindChildren;
@@ -309,7 +309,7 @@ void Html::SetInnerHTML(Control^ control, String^ html)
 								{
 								case '/':
 								{
-									if (Html::typeid->IsAssignableFrom($this->GetType()))
+									if (dynamic_cast<Html^>($this))
 									{
 										Match^ val = (gcnew Regex("^</(\\w+) ?"))->Match(head);
 										if (val != nullptr && val->Success)
@@ -377,7 +377,7 @@ void Html::Reconstruction(Control^ control)
 	{
 		array<Web^>^ list = Web::Find();
 		for (int i = 0; i < list->Length; i++) list[i]->OnLoad(EventArgs::Empty);
-		for (int i = 0; i < control->Controls->Count; i++) if (Html::typeid->IsAssignableFrom(control->Controls[i]->GetType())) return;
+		for (int i = 0; i < control->Controls->Count; i++) if (dynamic_cast<Html^>(control->Controls[i])) return;
 		String^ html = GetInnerHTML(control);
 		control->Controls->Clear();
 		if (html != String::Empty) SetInnerHTML(control, html);
