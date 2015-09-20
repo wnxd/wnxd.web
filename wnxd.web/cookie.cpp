@@ -59,9 +59,7 @@ String^ Cookie::cookie_enter::HttpWriterRead(TextWriter^ hw, Encoding^ encoding)
 		System::Collections::ArrayList^ arr = (System::Collections::ArrayList^)T->GetField("_buffers", all)->GetValue(hw);
 		if (arr->Count > 0)
 		{
-			Assembly^ assembly = Assembly::Load("System.Web, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-			Type^ IHttpResponseElement = assembly->GetType("System.Web.IHttpResponseElement");
-			MethodInfo^ mi = IHttpResponseElement->GetMethod("GetBytes", all);
+			MethodInfo^ mi = T->Assembly->GetType("System.Web.IHttpResponseElement")->GetMethod("GetBytes", all);
 			for (int i = 0; i < arr->Count; i++) str += encoding->GetString((array<Byte>^)mi->Invoke(arr[i], nullptr));
 		}
 		array<wchar_t>^ charBuffer = (array<wchar_t>^)T->GetField("_charBuffer", all)->GetValue(hw);
