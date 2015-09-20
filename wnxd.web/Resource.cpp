@@ -4,12 +4,17 @@
 using namespace wnxd::Web;
 using namespace System::Reflection;
 using namespace System::Runtime::InteropServices;
+
+#ifdef UNICODE
+#define GetCSTR(str)  (LPCWSTR)((void*)Marshal::StringToHGlobalUni(str))
+#else
+#define GetCSTR(str)  (LPCSTR)Marshal::StringToHGlobalAnsi(str)
+#endif
 //class Resource
 //private
 System::String^ Resource::GetResource(int id)
 {
-	void* ptr = (void*)Marshal::StringToHGlobalAnsi(Assembly::GetExecutingAssembly()->ManifestModule->Name);
-	HMODULE hExe = GetModuleHandleA((LPCSTR)ptr);
+	HMODULE hExe = GetModuleHandle(GetCSTR(Assembly::GetExecutingAssembly()->ManifestModule->Name));
 	HRSRC hRes = FindResource(hExe, MAKEINTRESOURCE(id), TEXT("JAVASCRIPT"));
 	if (hRes == NULL) return nullptr;
 	HGLOBAL hgRes = LoadResource(hExe, hRes);
