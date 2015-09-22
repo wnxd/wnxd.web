@@ -376,7 +376,7 @@ void Html::Reconstruction(Control^ control)
 	if (control->HasControls())
 	{
 		array<Web^>^ list = Web::Find();
-		for (int i = 0; i < list->Length; i++) list[i]->OnLoad(EventArgs::Empty);
+		for (int i = 0; i < list->Length; i++) if (!list[i]->Insert) list[i]->OnLoad(EventArgs::Empty);
 		for (int i = 0; i < control->Controls->Count; i++) if (dynamic_cast<Html^>(control->Controls[i])) return;
 		String^ html = GetInnerHTML(control);
 		control->Controls->Clear();
