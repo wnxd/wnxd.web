@@ -94,6 +94,7 @@
     <ClInclude Include="enum.h" />
     <ClInclude Include="html.h" />
     <ClInclude Include="init.h" />
+    <ClInclude Include="interface.h" />
     <ClInclude Include="load.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="web.h" />
@@ -105,6 +106,7 @@
     <ClCompile Include="enum.cpp" />
     <ClCompile Include="html.cpp" />
     <ClCompile Include="init.cpp" />
+    <ClCompile Include="interface.cpp" />
     <ClCompile Include="load.cpp" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="web.cpp" />

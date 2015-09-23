@@ -14,10 +14,6 @@ namespace wnxd
 		/// </summary>
 		public ref class Cookie
 		{
-			static Cookie()
-			{
-				Enter::Register(cookie_enter::typeid, false);
-			}
 		private:
 			ref class cookie_enter : Enter
 			{
@@ -28,10 +24,6 @@ namespace wnxd
 				void Application_PostRequestHandlerExecute() override;
 			};
 		public:
-			/// <summary>
-			/// 用于触发cookie的入口类注册
-			/// </summary>
-			static void Init();
 			/// <summary>
 			/// 设置并同步cookie给指定域名
 			/// </summary>

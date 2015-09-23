@@ -8,10 +8,6 @@ using namespace System::Collections::Specialized;
 using namespace System::Reflection;
 //class Cookie
 //public
-void Cookie::Init()
-{
-
-}
 void Cookie::Set(HttpCookie^ cookie)
 {
 	Set(cookie, String::Empty);

@@ -117,48 +117,6 @@ namespace wnxd
 			{
 				HttpSessionState^ get();
 			}
-		public:
-			/// <summary>
-			/// 把当前对象注册,使其能监听应用程序相关事件
-			/// </summary>
-			void Register();
-			/// <summary>
-			/// 把当前对象注册,使其能监听应用程序相关事件
-			/// </summary>
-			/// <param name="assembly"></param>
-			void Register(bool assembly);
-			/// <summary>
-			/// 对继承enter类的对象进行注册,使其能监听应用程序相关事件
-			/// </summary>
-			/// <param name="obj">继承enter的对象</param>
-			static void Register(Enter^ obj);
-			/// <summary>
-			/// 对继承enter类的对象进行注册,使其能监听应用程序相关事件
-			/// </summary>
-			/// <param name="obj">继承enter的对象</param>
-			/// <param name="assembly"></param>
-			static void Register(Enter^ obj, bool assembly);
-			/// <summary>
-			/// 对继承enter类的对象类型进行注册,使其能监听应用程序相关事件
-			/// </summary>
-			/// <param name="enter">继承enter的类型</param>
-			static void Register(Type^ enter);
-			/// <summary>
-			/// 对继承enter类的对象类型进行注册,使其能监听应用程序相关事件
-			/// </summary>
-			/// <param name="enter">继承enter的类型</param>
-			/// <param name="assembly"></param>
-			static void Register(Type^ enter, bool assembly);
-			/// <summary>
-			/// 对一个继承enter类并且正在监听应用程序相关事件的对象进行注销
-			/// </summary>
-			/// <param name="obj">继承enter的对象</param>
-			static void Unregister(Enter^ obj);
-			/// <summary>
-			/// 对一个继承enter类并且正在监听应用程序相关事件的类型进行注销
-			/// </summary>
-			/// <param name="enter">继承enter的类型</param>
-			static void Unregister(Type^ enter);
 		};
 		/// <summary>
 		/// 特殊类,此类无法被创建与派生
