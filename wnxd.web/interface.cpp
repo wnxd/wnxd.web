@@ -11,6 +11,15 @@ using namespace System::Net;
 using namespace System::IO;
 //class InterfaceBase
 //protected
+String^ InterfaceBase::Domain::get()
+{
+	return this->_domain;
+}
+void InterfaceBase::Domain::set(String^ value)
+{
+	this->_domain = value;
+	InterfaceBase();
+}
 String^ InterfaceBase::Namespace::get()
 {
 	return this->_namespace;
@@ -63,17 +72,18 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 //public
 InterfaceBase::InterfaceBase()
 {
-	String^ domain = WebConfigurationManager::AppSettings["wnxd_interface_domain"];
-	if (String::IsNullOrEmpty(domain)) domain = HttpContext::Current->Request->Url->Scheme + "://" + HttpContext::Current->Request->Url->Authority + "/";
-	else
+	if (String::IsNullOrEmpty(this->_domain))
 	{
-		if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
-		if (domain[domain->Length - 1] != '/') domain += "/";
+		String^ domain = WebConfigurationManager::AppSettings["wnxd_interface_domain"];
+		if (String::IsNullOrEmpty(domain)) domain = HttpContext::Current->Request->Url->Authority;
+		this->_domain = domain;
 	}
+	if (this->_domain->Substring(0, 4) != "http") this->_domain = "http://" + this->_domain;
+	if (this->_domain[this->_domain->Length - 1] != '/') this->_domain += "/";
 	if (String::IsNullOrEmpty(this->_classname)) this->_classname = this->GetType()->Name;
 	String^ name = this->_classname;
 	if (!String::IsNullOrEmpty(this->_namespace)) name = this->_namespace + "." + name;
-	this->interface_url = domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(interface_enter::EncryptString(name, "wnxd: interface_name"));
+	this->interface_url = this->_domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(interface_enter::EncryptString(name, "wnxd: interface_name"));
 }
 //class interface_enter
 //internal

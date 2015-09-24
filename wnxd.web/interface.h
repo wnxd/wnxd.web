@@ -9,20 +9,29 @@ namespace wnxd
 	namespace Web
 	{
 		/// <summary>
-		/// web接口,继承该接口即可实现web接口
+		/// web接口,继承该接口可以让外部程序通过接口的方式调用此类
 		/// </summary>
 		public interface class Interface
 		{
 
 		};
 		/// <summary>
-		/// web接口调用基类,需在web.config的<appSettings>中配置接口域名,例如<add key="wnxd_interface_domain" value="接口域名" />
+		/// web接口调用基类,执行基类的run方法即可调用指定域名下的接口
+		/// 可以在web.config的<appSettings>中配置接口域名,例如<add key="wnxd_interface_domain" value="接口域名" />
 		/// </summary>
 		public ref class InterfaceBase
 		{
 		private:
-			String^ interface_url, ^_namespace, ^_classname;
+			String^ interface_url, ^_domain, ^_namespace, ^_classname;
 		protected:
+			/// <summary>
+			/// 接口所在域名,如果在web.config的<appSettings>中配置接口域名,则默认值为所配置的域名,否则接口域名为自身域名
+			/// </summary>
+			property String^ Domain
+			{
+				String^ get();
+				void set(String^ value);
+			}
 			/// <summary>
 			/// 调用接口的命名空间
 			/// </summary>
