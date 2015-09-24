@@ -275,7 +275,7 @@ array<Assembly^>^ Init::GetAllAssembly()
 //protected
 Init::Init()
 {
-	if (this->GetType()->FullName != "ASP.global_asax") throw gcnew TypeLoadException("<wnxd.web.init>是特殊类无法被继承");
+	if (this->GetType()->FullName != "ASP.global_asax") throw gcnew TypeLoadException("<wnxd.Web.Init>是特殊类无法被继承");
 	this->_init();
 	this->_callback("Initialize");
 }
