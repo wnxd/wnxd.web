@@ -1,19 +1,88 @@
 #include "interface.h"
 
 using namespace wnxd::Web;
-using namespace wnxd::javascript;
 using namespace System::Reflection;
 using namespace System::Text;
+using namespace System::Web::Security;
 using namespace System::Security::Cryptography;
 using namespace System::Globalization;
+using namespace System::Web::Configuration;
+using namespace System::Net;
+using namespace System::IO;
+//class InterfaceBase
+//protected
+String^ InterfaceBase::Namespace::get()
+{
+	return this->_namespace;
+}
+void InterfaceBase::Namespace::set(String^ value)
+{
+	this->_namespace = value;
+	InterfaceBase();
+}
+String^ InterfaceBase::ClassName::get()
+{
+	return this->_classname;
+}
+void InterfaceBase::ClassName::set(String^ value)
+{
+	this->_classname = value;
+	InterfaceBase();
+}
+json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
+{
+	try
+	{
+		json^ param = gcnew json();
+		param["Name"] = function;
+		param["Param"] = args;
+		WebRequest^ request = WebRequest::Create(this->interface_url);
+		request->Method = "POST";
+		request->ContentType = "application/x-www-form-urlencoded";
+		array<Byte>^ data = Encoding::UTF8->GetBytes(interface_enter::EncryptString(param->ToString(), "wnxd: interface_data"));
+		request->ContentLength = data->Length;
+		Stream^ dataStream = request->GetRequestStream();
+		dataStream->Write(data, 0, data->Length);
+		dataStream->Flush();
+		dataStream->Close();
+		WebResponse^ response = request->GetResponse();
+		dataStream = response->GetResponseStream();
+		StreamReader^ reader = gcnew StreamReader(dataStream);
+		String^ responseData = reader->ReadToEnd();
+		reader->Close();
+		dataStream->Close();
+		response->Close();
+		if (!String::IsNullOrEmpty(responseData)) return gcnew json(interface_enter::DecryptString(responseData, "wnxd: interface_data"));
+	}
+	catch (...)
+	{
+
+	}
+	return gcnew json();
+}
+//public
+InterfaceBase::InterfaceBase()
+{
+	String^ domain = WebConfigurationManager::AppSettings["wnxd_interface_domain"];
+	if (String::IsNullOrEmpty(domain)) domain = HttpContext::Current->Request->Url->Scheme + "://" + HttpContext::Current->Request->Url->Authority + "/";
+	else
+	{
+		if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
+		if (domain[domain->Length - 1] != '/') domain += "/";
+	}
+	if (String::IsNullOrEmpty(this->_classname)) this->_classname = this->GetType()->Name;
+	String^ name = this->_classname;
+	if (!String::IsNullOrEmpty(this->_namespace)) name = this->_namespace + "." + name;
+	this->interface_url = domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(interface_enter::EncryptString(name, "wnxd: interface_name"));
+}
 //class interface_enter
-//private
+//internal
 String^ interface_enter::EncryptString(String^ sInputString, String^ sKey)
 {
 	array<Byte>^ data = Encoding::UTF8->GetBytes(sInputString);
 	DESCryptoServiceProvider^ DES = gcnew DESCryptoServiceProvider();
-	DES->Key = ASCIIEncoding::ASCII->GetBytes(sKey);
-	DES->IV = ASCIIEncoding::ASCII->GetBytes(sKey);
+	DES->Key = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
+	DES->IV = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
 	ICryptoTransform^ desencrypt = DES->CreateEncryptor();
 	array<Byte>^ result = desencrypt->TransformFinalBlock(data, 0, data->Length);
 	return BitConverter::ToString(result);
@@ -24,8 +93,8 @@ String^ interface_enter::DecryptString(String^ sInputString, String^ sKey)
 	array<Byte>^ data = gcnew array<Byte>(sInput->Length);
 	for (int i = 0; i < sInput->Length; i++) data[i] = Byte::Parse(sInput[i], NumberStyles::HexNumber);
 	DESCryptoServiceProvider^ DES = gcnew DESCryptoServiceProvider();
-	DES->Key = ASCIIEncoding::ASCII->GetBytes(sKey);
-	DES->IV = ASCIIEncoding::ASCII->GetBytes(sKey);
+	DES->Key = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
+	DES->IV = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
 	ICryptoTransform^ desencrypt = DES->CreateDecryptor();
 	array<Byte>^ result = desencrypt->TransformFinalBlock(data, 0, data->Length);
 	return Encoding::UTF8->GetString(result);
@@ -34,11 +103,18 @@ String^ interface_enter::DecryptString(String^ sInputString, String^ sKey)
 void interface_enter::Initialize()
 {
 	List<Type^>^ l = gcnew List<Type^>();
-	array<Assembly^>^ list = AppDomain::CurrentDomain->GetAssemblies();
+	array<Assembly^>^ list = Init::GetAllAssembly();
 	for (int i = 0; i < list->Length; i++)
 	{
-		array<Type^>^ tlist = list[i]->GetTypes();
-		for (int n = 0; n < tlist->Length; n++) if (Interface::typeid->IsAssignableFrom(tlist[n]) && tlist[n] != Interface::typeid) l->Add(tlist[n]);
+		try
+		{
+			array<Type^>^ tlist = list[i]->GetTypes();
+			for (int n = 0; n < tlist->Length; n++) if (Interface::typeid->IsAssignableFrom(tlist[n]) && tlist[n] != Interface::typeid) l->Add(tlist[n]);
+		}
+		catch (...)
+		{
+
+		}
 	}
 	this->ilist = l->ToArray();
 }
@@ -52,8 +128,8 @@ void interface_enter::Application_BeginRequest()
 		{
 			try
 			{
-				name = this->DecryptString(HttpUtility::UrlDecode(name), "wnxdname");
-				param = this->DecryptString(param, "wnxddata");
+				name = DecryptString(HttpUtility::UrlDecode(name), "wnxd: interface_name");
+				param = DecryptString(param, "wnxd: interface_data");
 				json^ info = gcnew json(param);
 				String^ fn = (String^)((json^)info["Name"])->TryConvert(String::typeid);
 				if (!String::IsNullOrEmpty(fn))
@@ -76,7 +152,7 @@ void interface_enter::Application_BeginRequest()
 									args->Add(o);
 								}
 								json^ r = gcnew json(mi->Invoke(obj, args->ToArray()));
-								this->Response->Write(this->EncryptString(r->ToString(), "wnxddata"));
+								this->Response->Write(EncryptString(r->ToString(), "wnxd: interface_data"));
 								break;
 							}
 						}

@@ -4,7 +4,6 @@
 using namespace wnxd::Web;
 using namespace wnxd::Config;
 using namespace System::Text::RegularExpressions;
-using namespace System::Reflection;
 using namespace System::IO;
 //class Enter
 //protected
@@ -104,7 +103,7 @@ HttpSessionState^ Enter::Session::get()
 //private
 void Init::_init()
 {
-	array<Assembly^>^ list = AppDomain::CurrentDomain->GetAssemblies();
+	array<Assembly^>^ list = GetAllAssembly();
 	config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
 	String^ className = config["old_Global"];
 	_enter_list = gcnew List<Enter^>();
@@ -129,14 +128,21 @@ void Init::_init()
 				}
 			}
 		}
-		array<Type^>^ tlist = list[i]->GetTypes();
-		for (int n = 0; n < tlist->Length; n++)
+		try
 		{
-			if (Enter::typeid->IsAssignableFrom(tlist[n]) && tlist[n] != Enter::typeid)
+			array<Type^>^ tlist = list[i]->GetTypes();
+			for (int n = 0; n < tlist->Length; n++)
 			{
-				Enter^ e = (Enter^)Activator::CreateInstance(tlist[n]);
-				if (e != nullptr) _enter_list->Add(e);
+				if (Enter::typeid->IsAssignableFrom(tlist[n]) && tlist[n] != Enter::typeid)
+				{
+					Enter^ e = (Enter^)Activator::CreateInstance(tlist[n]);
+					if (e != nullptr) _enter_list->Add(e);
+				}
 			}
+		}
+		catch (...)
+		{
+
 		}
 	}
 }
@@ -242,6 +248,29 @@ void Init::Session_End(Object^ sender, EventArgs^ e)
 void Init::Application_Disposed(Object^ sender, EventArgs^ e)
 {
 	this->_callback("Application_Disposed", sender, e);
+}
+//internal
+array<Assembly^>^ Init::GetAllAssembly()
+{
+	String^ dir = AppDomain::CurrentDomain->RelativeSearchPath;
+	if (String::IsNullOrEmpty(dir)) dir = AppDomain::CurrentDomain->BaseDirectory;
+	else dir += "\\";
+	DirectoryInfo^ di = gcnew DirectoryInfo(dir);
+	array<FileInfo^>^ fis = di->GetFiles("*.dll");
+	List<Assembly^>^ list = gcnew List<Assembly^>();
+	for (int i = 0; i < fis->Length; i++)
+	{
+		try
+		{
+			Assembly^ assembly = Assembly::LoadFrom(fis[i]->FullName);
+			if (assembly != nullptr) list->Add(assembly);
+		}
+		catch (...)
+		{
+
+		}
+	}
+	return list->ToArray();
 }
 //protected
 Init::Init()

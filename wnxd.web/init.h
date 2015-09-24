@@ -2,6 +2,7 @@ using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Web;
 using namespace System::Web::SessionState;
+using namespace System::Reflection;
 
 namespace wnxd
 {
@@ -148,6 +149,7 @@ namespace wnxd
 			void Application_Disposed(Object^ sender, EventArgs^ e);
 		internal:
 			static IList<Enter^>^ _enter_list;
+			static array<Assembly^>^ GetAllAssembly();
 		protected:
 			Init();
 		};
