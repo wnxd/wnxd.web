@@ -118,6 +118,11 @@ namespace wnxd
 			{
 				HttpSessionState^ get();
 			}
+		public:
+			/// <summary>
+			/// 初始化入口类相关配置
+			/// </summary>
+			static void Init();
 		};
 		/// <summary>
 		/// 特殊类,此类无法被创建与派生

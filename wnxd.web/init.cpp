@@ -99,6 +99,24 @@ HttpSessionState^ Enter::Session::get()
 {
 	return HttpContext::Current->Session;
 }
+//public
+void Enter::Init()
+{
+	String^ path = AppDomain::CurrentDomain->BaseDirectory + "Global.asax";
+	if (File::Exists(path))
+	{
+		String^ str = file::ReadFile(path);
+		Match^ mc = (gcnew Regex("Inherits=\"(.*?)\""))->Match(str);
+		if (mc != nullptr)
+		{
+			if (mc->Groups[1]->Value == "wnxd.Web.Init") return;
+			config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
+			config["old_Global"] = mc->Groups[1]->Value;
+		}
+		File::SetAttributes(path, FileAttributes::Normal);
+	}
+	file::WriteFile(path, "<%@ Application Inherits=\"wnxd.Web.Init\" Language=\"C#\" %>");
+}
 //class Init
 //private
 void Init::_init()
