@@ -17,7 +17,7 @@ namespace wnxd
 		};
 		/// <summary>
 		/// web接口调用基类,执行基类的run方法即可调用指定域名下的接口
-		/// 可以在web.config的<appSettings>中配置接口域名,例如<add key="wnxd_interface_domain" value="接口域名" />
+		/// 可以在web.config的&lt;appSettings&gt;中配置接口域名,例如&lt;add key=&quot;wnxd_interface_domain&quot; value=&quot;接口域名&quot; /&gt;
 		/// </summary>
 		public ref class InterfaceBase
 		{
@@ -25,7 +25,7 @@ namespace wnxd
 			String^ interface_url, ^_domain, ^_namespace, ^_classname;
 		protected:
 			/// <summary>
-			/// 接口所在域名,如果在web.config的<appSettings>中配置接口域名,则默认值为所配置的域名,否则接口域名为自身域名
+			/// 接口所在域名,如果在web.config的&lt;appSettings&gt;中配置接口域名,则默认值为所配置的域名,否则接口域名为自身域名
 			/// </summary>
 			property String^ Domain
 			{

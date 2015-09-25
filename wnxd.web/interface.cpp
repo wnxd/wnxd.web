@@ -167,6 +167,7 @@ void interface_enter::Application_BeginRequest()
 							}
 						}
 					}
+					this->Response->End();
 				}
 			}
 			catch (...)
@@ -174,6 +175,5 @@ void interface_enter::Application_BeginRequest()
 
 			}
 		}
-		this->Response->End();
 	}
 }
