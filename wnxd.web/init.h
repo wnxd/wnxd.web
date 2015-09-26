@@ -13,6 +13,10 @@ namespace wnxd
 		/// </summary>
 		public ref class Enter abstract
 		{
+			static Enter()
+			{
+				Init();
+			}
 		protected:
 			/// <summary>
 			/// 当ASP.NET环境初始化时触发。
