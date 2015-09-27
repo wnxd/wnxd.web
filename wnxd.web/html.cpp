@@ -783,6 +783,14 @@ void Html::List::default::set(int index, String^ value)
 }
 //class Dictionary
 //public
+Html::Dictionary::Dictionary(IDictionary<String^, String^>^ dictionary) : System::Collections::Generic::Dictionary<String^, String^>(dictionary)
+{
+
+}
+Html::Dictionary::Dictionary(IEqualityComparer<String^>^ comparer) : System::Collections::Generic::Dictionary<String^, String^>(comparer)
+{
+
+}
 void Html::Dictionary::Add(String^ key, String^ value)
 {
 	this->System::Collections::Generic::Dictionary<String^, String^>::Add(key, value);

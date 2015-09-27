@@ -34,8 +34,8 @@ namespace wnxd
 			internal:
 				event Action^ Changed;
 			public:
-				Dictionary(IDictionary<String^, String^>^ dictionary) : System::Collections::Generic::Dictionary<String^, String^>(dictionary) { }
-				Dictionary(IEqualityComparer<String^>^ comparer) : System::Collections::Generic::Dictionary<String^, String^>(comparer) { }
+				Dictionary(IDictionary<String^, String^>^ dictionary);
+				Dictionary(IEqualityComparer<String^>^ comparer);
 				virtual void Add(String^ key, String^ value) new = IDictionary<String^, String^>::Add;
 				virtual bool Remove(String^ key) new = IDictionary<String^, String^>::Remove;
 				virtual void Clear() new = IDictionary<String^, String^>::Clear;
