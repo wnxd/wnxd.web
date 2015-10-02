@@ -13,7 +13,22 @@ namespace wnxd
 		/// </summary>
 		public interface class Interface
 		{
-
+		public:
+			/// <summary>
+			/// 此属性可以被web接口的方法添加描述内容
+			/// </summary>
+			[AttributeUsage(AttributeTargets::Method)]
+			ref class MethodAttribute sealed : Attribute
+			{
+			private:
+				String^ _summary;
+			public:
+				property String^ summary
+				{
+					String^ get();
+					void set(String^ value);
+				}
+			};
 		};
 		/// <summary>
 		/// web接口调用基类,执行基类的run方法即可调用指定域名下的接口
@@ -23,6 +38,7 @@ namespace wnxd
 		{
 		private:
 			String^ interface_url, ^_domain, ^_namespace, ^_classname;
+			void init();
 		protected:
 			/// <summary>
 			/// 接口所在域名,如果在web.config的&lt;appSettings&gt;中配置接口域名,则默认值为所配置的域名,否则接口域名为自身域名

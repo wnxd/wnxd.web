@@ -9,6 +9,16 @@ using namespace System::Globalization;
 using namespace System::Web::Configuration;
 using namespace System::Net;
 using namespace System::IO;
+//class MethodAttribute
+//public
+String^ Interface::MethodAttribute::summary::get()
+{
+	return this->_summary;
+}
+void Interface::MethodAttribute::summary::set(String^ value)
+{
+	this->_summary = value;
+}
 //class InterfaceBase
 //protected
 String^ InterfaceBase::Domain::get()
@@ -18,7 +28,7 @@ String^ InterfaceBase::Domain::get()
 void InterfaceBase::Domain::set(String^ value)
 {
 	this->_domain = value;
-	InterfaceBase();
+	this->init();
 }
 String^ InterfaceBase::Namespace::get()
 {
@@ -27,7 +37,7 @@ String^ InterfaceBase::Namespace::get()
 void InterfaceBase::Namespace::set(String^ value)
 {
 	this->_namespace = value;
-	InterfaceBase();
+	this->init();
 }
 String^ InterfaceBase::ClassName::get()
 {
@@ -36,7 +46,7 @@ String^ InterfaceBase::ClassName::get()
 void InterfaceBase::ClassName::set(String^ value)
 {
 	this->_classname = value;
-	InterfaceBase();
+	this->init();
 }
 json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 {
@@ -69,14 +79,20 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 	}
 	return gcnew json();
 }
-//public
-InterfaceBase::InterfaceBase()
+void InterfaceBase::init()
 {
 	if (String::IsNullOrEmpty(this->_domain))
 	{
-		String^ domain = WebConfigurationManager::AppSettings["wnxd_interface_domain"];
-		if (String::IsNullOrEmpty(domain)) domain = HttpContext::Current->Request->Url->Authority;
-		this->_domain = domain;
+		try
+		{
+			String^ domain = WebConfigurationManager::AppSettings["wnxd_interface_domain"];
+			if (String::IsNullOrEmpty(domain)) domain = HttpContext::Current->Request->Url->Authority;
+			this->_domain = domain;
+		}
+		catch (...)
+		{
+			this->_domain = "127.0.0.1";
+		}
 	}
 	if (this->_domain->Substring(0, 4) != "http") this->_domain = "http://" + this->_domain;
 	if (this->_domain[this->_domain->Length - 1] != '/') this->_domain += "/";
@@ -84,6 +100,11 @@ InterfaceBase::InterfaceBase()
 	String^ name = this->_classname;
 	if (!String::IsNullOrEmpty(this->_namespace)) name = this->_namespace + "." + name;
 	this->interface_url = this->_domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(interface_enter::EncryptString(name, "wnxd: interface_name"));
+}
+//public
+InterfaceBase::InterfaceBase()
+{
+	init();
 }
 //class interface_enter
 //internal
@@ -142,32 +163,90 @@ void interface_enter::Application_BeginRequest()
 				param = DecryptString(param, "wnxd: interface_data");
 				json^ info = gcnew json(param);
 				String^ fn = (String^)((json^)info["Name"])->TryConvert(String::typeid);
-				if (!String::IsNullOrEmpty(fn))
+				if (name == "$query$")
 				{
-					for (int i = 0; this->ilist->Length; i++)
+					json^ r = gcnew json();
+					if (fn == "interface_name") for (int i = 0; i < this->ilist->Length; i++) r->push(this->ilist[i]->FullName);
+					else if (fn == "interface_info")
 					{
-						Type^ T = this->ilist[i];
-						if (T->FullName == name || T->Name == name)
+						Array^ EmptyArray = gcnew array<json^>(0);
+						json^ list = (json^)info["List"];
+						for (int i = 0; i < list->length.Value; i++)
 						{
-							Interface^ obj = (Interface^)Activator::CreateInstance(T);
-							MethodInfo^ mi = T->GetMethod(fn);
-							if (mi != nullptr)
+							name = (String^)((json^)list[i])->TryConvert(String::typeid);
+							for (int n = 0; n < this->ilist->Length; n++)
 							{
-								json^ fp = (json^)info["Param"];
-								array<ParameterInfo^>^ pis = mi->GetParameters();
-								List<Object^>^ args = gcnew List<Object^>();
-								for (int n = 0; n < pis->Length; n++)
+								if (this->ilist[n]->FullName == name)
 								{
-									Object^ o = ((json^)fp[n])->TryConvert(pis[n]->ParameterType);
-									args->Add(o);
+									json^ d = gcnew json();
+									d["Namespace"] = this->ilist[n]->Namespace;
+									d["ClassName"] = this->ilist[n]->Name;
+									json^ Methods = gcnew json(EmptyArray);
+									array<MethodInfo^>^ mis = this->ilist[n]->GetMethods(BindingFlags::Instance | BindingFlags::Public | BindingFlags::DeclaredOnly);
+									for (int x = 0; x < mis->Length; x++)
+									{
+										MethodInfo^ mi = mis[x];
+										json^ t = gcnew json();
+										t["MethodName"] = mi->Name;
+										t["ReturnType"] = mi->ReturnType->FullName;
+										json^ Parameters = gcnew json(EmptyArray);
+										array<ParameterInfo^>^ pis = mi->GetParameters();
+										for (int y = 0; y < pis->Length; y++)
+										{
+											ParameterInfo^ pi = pis[y];
+											json^ tt = gcnew json();
+											tt["ParameterName"] = pi->Name;
+											if (pi->IsRetval) tt["Type"] = 2;
+											else if (pi->IsOut) tt["Type"] = 1;
+											else tt["Type"] = 0;
+											tt["IsOptional"] = pi->IsOptional;
+											if (pi->IsOptional) tt["DefaultValue"] = pi->DefaultValue;
+											tt["ParameterType"] = pi->ParameterType->FullName;
+											Parameters->push(tt);
+										}
+										t["Parameters"] = Parameters;
+										array<Interface::MethodAttribute^>^ Attributes = (array<Interface::MethodAttribute^>^)mi->GetCustomAttributes(Interface::MethodAttribute::typeid, true);
+										if (Attributes->Length>0) t["summary"] = Attributes[0]->summary;
+										Methods->push(t);
+									}
+									d["Methods"] = Methods;
+									r->push(d);
 								}
-								json^ r = gcnew json(mi->Invoke(obj, args->ToArray()));
-								this->Response->Write(EncryptString(r->ToString(), "wnxd: interface_data"));
-								break;
 							}
 						}
 					}
+					this->Response->Write(EncryptString(r->ToString(), "wnxd: interface_data"));
 					this->Response->End();
+				}
+				else
+				{
+					if (!String::IsNullOrEmpty(fn))
+					{
+						for (int i = 0; this->ilist->Length; i++)
+						{
+							Type^ T = this->ilist[i];
+							if (T->FullName == name || T->Name == name)
+							{
+								Interface^ obj = (Interface^)Activator::CreateInstance(T);
+								MethodInfo^ mi = T->GetMethod(fn);
+								if (mi != nullptr)
+								{
+									json^ fp = (json^)info["Param"];
+									array<ParameterInfo^>^ pis = mi->GetParameters();
+									List<Object^>^ args = gcnew List<Object^>();
+									for (int n = 0; n < pis->Length; n++)
+									{
+										Object^ o = ((json^)fp[n])->TryConvert(pis[n]->ParameterType);
+										args->Add(o);
+									}
+									json^ r = gcnew json(mi->Invoke(obj, args->ToArray()));
+									this->Response->Write(EncryptString(r->ToString(), "wnxd: interface_data"));
+									break;
+								}
+							}
+						}
+						this->Response->End();
+					}
 				}
 			}
 			catch (...)
