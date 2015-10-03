@@ -15,7 +15,7 @@ namespace wnxd
 		{
 		public:
 			/// <summary>
-			/// 此属性可以被web接口的方法添加描述内容
+			/// 此属性可以为web接口的方法添加描述内容
 			/// </summary>
 			[AttributeUsage(AttributeTargets::Method)]
 			ref class MethodAttribute sealed : Attribute
