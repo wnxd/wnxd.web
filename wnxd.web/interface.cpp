@@ -9,6 +9,7 @@ using namespace System::Globalization;
 using namespace System::Web::Configuration;
 using namespace System::Net;
 using namespace System::IO;
+using namespace System::Text::RegularExpressions;
 //class MethodAttribute
 //public
 String^ Interface::MethodAttribute::summary::get()
@@ -107,6 +108,26 @@ InterfaceBase::InterfaceBase()
 	init();
 }
 //class interface_enter
+//private
+String^ interface_enter::GetGenericName(Type^ gt)
+{
+	String^ name = gt->FullName;
+	array<Type^>^ types = gt->GetGenericArguments();
+	Regex^ regex = gcnew Regex("^(.+?)`" + types->Length + "\\[.+\\]$");
+	Match^ mc = regex->Match(name);
+	if (mc->Success)
+	{
+		name = mc->Groups[1]->Value + "<";
+		for (int i = 0; i < types->Length; i++)
+		{
+			if (i > 0) name += ", ";
+			Type^ T = types[i];
+			name += T->IsGenericType ? this->GetGenericName(T) : T->FullName;
+		}
+		name += ">";
+	}
+	return name;
+}
 //internal
 String^ interface_enter::EncryptString(String^ sInputString, String^ sKey)
 {
@@ -188,7 +209,8 @@ void interface_enter::Application_BeginRequest()
 										MethodInfo^ mi = mis[x];
 										json^ t = gcnew json();
 										t["MethodName"] = mi->Name;
-										t["ReturnType"] = mi->ReturnType->FullName;
+										Type^ T = mi->ReturnType;
+										t["ReturnType"] = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
 										json^ Parameters = gcnew json(EmptyArray);
 										array<ParameterInfo^>^ pis = mi->GetParameters();
 										for (int y = 0; y < pis->Length; y++)
@@ -201,7 +223,8 @@ void interface_enter::Application_BeginRequest()
 											else tt["Type"] = 0;
 											tt["IsOptional"] = pi->IsOptional;
 											if (pi->IsOptional) tt["DefaultValue"] = pi->DefaultValue;
-											tt["ParameterType"] = pi->ParameterType->FullName;
+											T = pi->ParameterType;
+											tt["ParameterType"] = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
 											Parameters->push(tt);
 										}
 										t["Parameters"] = Parameters;

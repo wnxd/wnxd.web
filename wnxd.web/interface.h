@@ -78,6 +78,7 @@ namespace wnxd
 		{
 		private:
 			array<Type^>^ ilist;
+			String^ GetGenericName(Type^ gt);
 		internal:
 			static String^ EncryptString(String^ sInputString, String^ sKey);
 			static String^ DecryptString(String^ sInputString, String^ sKey);
