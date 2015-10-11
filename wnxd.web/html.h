@@ -102,8 +102,8 @@ namespace wnxd
 			}
 			String^ getAttribute(String^ attributename);
 			void setAttribute(String^ attributename, String^ attributevalue);
-			void Render(HtmlTextWriter^ writer) override;
-			String^ ToString() override;
+			virtual	void Render(HtmlTextWriter^ writer) override;
+			virtual	String^ ToString() override;
 			String^ GetType() new;
 			/// <summary>
 			/// 设置当前控件的html代码

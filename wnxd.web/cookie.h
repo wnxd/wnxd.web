@@ -20,8 +20,8 @@ namespace wnxd
 			private:
 				String^ HttpWriterRead(TextWriter^ hw, Encoding^ encoding);
 			protected:
-				void Application_BeginRequest() override;
-				void Application_PostRequestHandlerExecute() override;
+				virtual void Application_BeginRequest() override;
+				virtual void Application_PostRequestHandlerExecute() override;
 			};
 		public:
 			/// <summary>

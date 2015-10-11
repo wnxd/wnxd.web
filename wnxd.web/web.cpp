@@ -74,6 +74,10 @@ void wnxd::Web::Web::TargetUrl::set(String^ value)
 {
 	if (!String::IsNullOrEmpty(value)) this->_targeturl = value;
 }
+wnxd::Web::Web::Web()
+{
+	this->_prefix = "wnxd_ajax";
+}
 void wnxd::Web::Web::OnLoad(EventArgs^ e)
 {
 	class Page^ page = this->Page;

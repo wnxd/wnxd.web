@@ -14,16 +14,16 @@ namespace wnxd
 			ref class load_enter : Enter
 			{
 			protected:
-				void Application_BeginRequest() override;
+				virtual void Application_BeginRequest() override;
 			};
-			int _threshold = 200;
-			bool _jump = false, _refresh = false;
+			int _threshold;
+			bool _jump, _refresh;
 			bool _SaveHtml();
 			static Load^ _FindFirst(Control^ control);
 			static Load^ _Find(Control^ control, String^ id);
 			static List<Load^>^ _Find(Control^ control);
 		internal:
-			bool Insert = false;
+			bool Insert;
 		public:
 			property int Threshold
 			{
@@ -32,8 +32,8 @@ namespace wnxd
 			}
 			property String^ Img;
 			Load();
-			void OnInit(EventArgs^ e) override;
-			void Render(HtmlTextWriter^ writer) override;
+			virtual void OnInit(EventArgs^ e) override;
+			virtual void Render(HtmlTextWriter^ writer) override;
 			static Load^ FindFirst();
 			static Load^ Find(String^ id);
 			static array<Load^>^ Find();

@@ -14,12 +14,12 @@ namespace wnxd
 		public ref class Web : Control
 		{
 		private:
-			String^ _prefix = "wnxd_ajax", ^_script, ^_html, ^_targeturl;
+			String^ _prefix, ^_script, ^_html, ^_targeturl;
 			static Web^ _FindFirst(Control^ control);
 			static Web^ _Find(Control^ control, String^ id);
 			static List<Web^>^ _Find(Control^ control);
 		internal:
-			bool Insert = false;
+			bool Insert;
 		public:
 			/// <summary>
 			/// 在控件所在位置加载的js
@@ -53,8 +53,9 @@ namespace wnxd
 				String^ get();
 				void set(String^ value);
 			}
-			void OnLoad(EventArgs^ e) override;
-			void Render(HtmlTextWriter^ writer) override;
+			Web();
+			virtual void OnLoad(EventArgs^ e) override;
+			virtual void Render(HtmlTextWriter^ writer) override;
 			/// <summary>
 			/// 在控件所在位置添加一个js
 			/// </summary>

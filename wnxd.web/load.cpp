@@ -104,6 +104,7 @@ void Load::Threshold::set(int value)
 }
 Load::Load()
 {
+	this->_threshold = 200;
 	String^ path = this->MapPathSecure("~/wnxd/");
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
 	if (!File::Exists(path + "wnxd_load.tmp")) file::WriteFile(path + "wnxd_load.tmp", "<wnxd></wnxd>");

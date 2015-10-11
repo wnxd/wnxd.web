@@ -83,8 +83,8 @@ namespace wnxd
 			static String^ EncryptString(String^ sInputString, String^ sKey);
 			static String^ DecryptString(String^ sInputString, String^ sKey);
 		protected:
-			void Initialize() override;
-			void Application_BeginRequest() override;
+			virtual void Initialize() override;
+			virtual void Application_BeginRequest() override;
 		};
 	}
 }
