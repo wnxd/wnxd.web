@@ -74,13 +74,15 @@ void Cookie::cookie_enter::Application_BeginRequest()
 		json^ list = gcnew json(HttpUtility::UrlDecode(this->Request->QueryString["list"]));
 		if (json::operator!=(list, js::undefined))
 		{
-			HttpCookie^ cc = gcnew HttpCookie((String^)list["Name"], (String^)list["Value"]);
-			cc->Domain = (String^)list["Domain"];
-			cc->Expires = (DateTime)list["Expires"];
-			cc->HttpOnly = (bool)list["HttpOnly"];
-			cc->Path = (String^)list["Path"];
-			cc->Secure = (bool)list["Secure"];
-			NameValueCollection^ nvc = (NameValueCollection^)list["Values"];
+			String^ Name = (String^)((json^)list["Name"])->TryConvert(String::typeid);
+			String^ Value = (String^)((json^)list["Value"])->TryConvert(String::typeid);
+			HttpCookie^ cc = gcnew HttpCookie(Name, Value);
+			cc->Domain = (String^)((json^)list["Domain"])->TryConvert(String::typeid);
+			cc->Expires = (DateTime)((json^)list["Expires"])->TryConvert(DateTime::typeid);
+			cc->HttpOnly = (bool)((json^)list["HttpOnly"])->TryConvert(Boolean::typeid);
+			cc->Path = (String^)((json^)list["Path"])->TryConvert(String::typeid);
+			cc->Secure = (bool)((json^)list["Secure"])->TryConvert(Boolean::typeid);
+			NameValueCollection^ nvc = (NameValueCollection^)((json^)list["Values"])->TryConvert(NameValueCollection::typeid);
 			if (nvc != nullptr) cc->Values->Add(nvc);
 			this->Response->AppendCookie(cc);
 			this->Response->AddHeader("P3P", "CP=NON DSP COR CURa ADMa DEVa TAIa PSAa PSDa IVAa IVDa CONa HISa TELa OTPa OUR UNRa IND UNI COM NAV INT DEM CNT PRE LOC");
