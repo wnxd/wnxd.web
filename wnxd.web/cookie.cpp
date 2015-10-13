@@ -26,18 +26,20 @@ void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 {
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
 	if (domain[domain->Length - 1] != '/') domain += "/";
-	Object^ session = HttpContext::Current->Session["wnxd_cookie"];
-	json^ list;
-	if (session == nullptr)
+	HttpCookie^ wc = HttpContext::Current->Response->Cookies["wnxd_cookie"];
+	if (wc == nullptr)
 	{
-		list = gcnew json();
-		HttpContext::Current->Session->Add("wnxd_cookie", list);
+		wc = HttpContext::Current->Request->Cookies["wnxd_cookie"];
+		if (wc == nullptr) wc = gcnew HttpCookie("wnxd_cookie");
+		HttpContext::Current->Response->AppendCookie(wc);
 	}
-	else list = (json^)session;
+	json^ list = gcnew json(wc->Value);
 	json^ d = (json^)list[domain];
 	if (json::operator==(d, js::undefined)) d = gcnew json();
 	d->push(cookie);
 	list[domain] = d;
+	wc->Value = list->ToString();
+	HttpContext::Current->Response->SetCookie(wc);
 }
 void Cookie::Sync(IList<String^>^ domains, HttpCookie^ cookie)
 {
@@ -93,29 +95,40 @@ void Cookie::cookie_enter::Application_BeginRequest()
 }
 void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 {
-	Object^ session = HttpContext::Current->Session["wnxd_cookie"];
-	if (session != nullptr)
+	bool b = false;
+	HttpCookie^ wc = this->Response->Cookies["wnxd_cookie"];
+	if (wc == nullptr || String::IsNullOrEmpty(wc->Value))
+	{
+		b = true;
+		wc = this->Request->Cookies["wnxd_cookie"];
+	}
+	if (wc != nullptr)
 	{
 		if (this->Response->StatusCode == 200)
 		{
-			String^ html = this->HttpWriterRead(this->Response->Output, this->Response->ContentEncoding);
-			String^ script = String::Empty;
-			int count = 0;
-			for each (KeyValuePair<String^, json^> kv in (json^)session) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" wnxd_cookie=\"{0}wnxd.aspx?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
-			script += String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString()));
-			Html^ col = gcnew Html();
-			col->innerHTML = html;
-			Html^ div = Html::FindControl(col, "head");
-			if (div == nullptr)
+			if (!String::IsNullOrEmpty(wc->Value))
 			{
-				div = Html::FindControl(col, "html");
-				if (div == nullptr) div = col;
+				String^ html = this->HttpWriterRead(this->Response->Output, this->Response->ContentEncoding);
+				String^ script = String::Empty;
+				int count = 0;
+				for each (KeyValuePair<String^, json^> kv in gcnew json(wc->Value)) for (int i = 0; i < kv.Value->length.Value; i++, count++) script += String::Format("<script type=\"text/javascript\" wnxd_cookie=\"{0}wnxd.aspx?wnxd_cookie=sync&list={1}\"></script>", kv.Key, HttpUtility::UrlEncode(kv.Value[i]->ToString()));
+				script += String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString()));
+				Html^ col = gcnew Html();
+				col->innerHTML = html;
+				Html^ div = Html::FindControl(col, "head");
+				if (div == nullptr)
+				{
+					div = Html::FindControl(col, "html");
+					if (div == nullptr) div = col;
+				}
+				div->Controls->AddAt(0, gcnew LiteralControl(script));
+				html = col->innerHTML;
+				this->Response->ClearContent();
+				this->Response->Write(html);
 			}
-			div->Controls->AddAt(0, gcnew LiteralControl(script));
-			html = col->innerHTML;
-			this->Response->ClearContent();
-			this->Response->Write(html);
-			HttpContext::Current->Session->Remove("wnxd_cookie");
+			wc->Expires = DateTime::Now.AddDays(-1);
+			if (b) this->Response->AppendCookie(wc);
+			else this->Response->SetCookie(wc);
 		}
 	}
 }
