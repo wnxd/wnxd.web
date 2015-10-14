@@ -73,7 +73,7 @@ void Cookie::cookie_enter::Application_BeginRequest()
 {
 	if (this->Request->QueryString["wnxd_cookie"] == "sync")
 	{
-		json^ list = gcnew json(HttpUtility::UrlDecode(this->Request->QueryString["list"]));
+		json^ list = gcnew json(this->Request->QueryString["list"]);
 		if (json::operator!=(list, js::undefined))
 		{
 			String^ Name = (String^)((json^)list["Name"])->TryConvert(String::typeid);
@@ -89,7 +89,7 @@ void Cookie::cookie_enter::Application_BeginRequest()
 			this->Response->AppendCookie(cc);
 			this->Response->AddHeader("P3P", "CP=NON DSP COR CURa ADMa DEVa TAIa PSAa PSDa IVAa IVDa CONa HISa TELa OTPa OUR UNRa IND UNI COM NAV INT DEM CNT PRE LOC");
 		}
-		this->Response->Write("wnxd.SyncCookieCallbak();");
+		this->Response->Write("window.wnxd && wnxd.SyncCookieCallbak();");
 		this->Response->End();
 	}
 }
@@ -115,18 +115,26 @@ void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 				script += String::Format("<script type=\"text/javascript\">{0}</script>", Resource::cookie->Replace("$$$", count.ToString()));
 				Html^ col = gcnew Html();
 				col->innerHTML = html;
-				Html^ div = Html::FindControl(col, "head");
-				if (div == nullptr)
+				try
 				{
-					div = Html::FindControl(col, "html");
-					if (div == nullptr) div = col;
+					Html^ div = Html::FindControl(col, "head");
+					if (div == nullptr)
+					{
+						div = Html::FindControl(col, "html");
+						if (div == nullptr) div = col;
+					}
+					div->Controls->AddAt(0, gcnew LiteralControl(script));
+					html = col->innerHTML;
+					this->Response->ClearContent();
+					this->Response->Write(html);
 				}
-				div->Controls->AddAt(0, gcnew LiteralControl(script));
-				html = col->innerHTML;
-				this->Response->ClearContent();
-				this->Response->Write(html);
+				catch (...)
+				{
+					return;
+				}
 			}
-			wc->Expires = DateTime::Now.AddDays(-1);
+			wc->Expires = *gcnew DateTime(0x7cf, 10, 12);
+			wc->Value = nullptr;
 			if (b) this->Response->AppendCookie(wc);
 			else this->Response->SetCookie(wc);
 		}
