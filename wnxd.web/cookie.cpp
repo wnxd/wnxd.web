@@ -26,8 +26,13 @@ void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 {
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
 	if (domain[domain->Length - 1] != '/') domain += "/";
-	HttpCookie^ wc = HttpContext::Current->Response->Cookies["wnxd_cookie"];
-	if (wc == nullptr)
+	HttpCookie^ wc;
+	System::Collections::IList^ slist = HttpContext::Current->Response->Cookies->AllKeys;
+	if (slist->Contains("wnxd_cookie"))
+	{
+		wc = HttpContext::Current->Response->Cookies["wnxd_cookie"];
+	}
+	else
 	{
 		wc = HttpContext::Current->Request->Cookies["wnxd_cookie"];
 		if (wc == nullptr) wc = gcnew HttpCookie("wnxd_cookie");
@@ -96,8 +101,13 @@ void Cookie::cookie_enter::Application_BeginRequest()
 void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 {
 	bool b = false;
-	HttpCookie^ wc = this->Response->Cookies["wnxd_cookie"];
-	if (wc == nullptr || String::IsNullOrEmpty(wc->Value))
+	HttpCookie^ wc;
+	System::Collections::IList^ slist = this->Response->Cookies->AllKeys;
+	if (slist->Contains("wnxd_cookie"))
+	{
+		wc = this->Response->Cookies["wnxd_cookie"];
+	}
+	else
 	{
 		b = true;
 		wc = this->Request->Cookies["wnxd_cookie"];
