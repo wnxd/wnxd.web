@@ -111,8 +111,8 @@ void Cookie::cookie_enter::Application_BeginRequest()
 			wc->Value = nullptr;
 			if (b) this->Response->AppendCookie(wc);
 			else this->Response->SetCookie(wc);
-			this->Response->End();
 		}
+		this->Response->End();
 	}
 }
 void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
