@@ -27,10 +27,7 @@ void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
 	if (domain[domain->Length - 1] != '/') domain += "/";
 	HttpCookie^ wc;
-	if (dynamic_cast<System::Collections::IList^>(HttpContext::Current->Response->Cookies->AllKeys)->Contains("wnxd_cookie"))
-	{
-		wc = HttpContext::Current->Response->Cookies["wnxd_cookie"];
-	}
+	if (dynamic_cast<System::Collections::IList^>(HttpContext::Current->Response->Cookies->AllKeys)->Contains("wnxd_cookie")) wc = HttpContext::Current->Response->Cookies["wnxd_cookie"];
 	else
 	{
 		wc = HttpContext::Current->Request->Cookies["wnxd_cookie"];
@@ -75,7 +72,8 @@ String^ Cookie::cookie_enter::HttpWriterRead(TextWriter^ hw, Encoding^ encoding)
 //public
 void Cookie::cookie_enter::Application_BeginRequest()
 {
-	if (this->Request->QueryString["wnxd_cookie"] == "sync")
+	String^ type = this->Request->QueryString["wnxd_cookie"];
+	if (type == "sync")
 	{
 		json^ list = gcnew json(this->Request->QueryString["list"]);
 		if (json::operator!=(list, js::undefined))
@@ -93,19 +91,35 @@ void Cookie::cookie_enter::Application_BeginRequest()
 			this->Response->AppendCookie(cc);
 			this->Response->AddHeader("P3P", "CP=NON DSP COR CURa ADMa DEVa TAIa PSAa PSDa IVAa IVDa CONa HISa TELa OTPa OUR UNRa IND UNI COM NAV INT DEM CNT PRE LOC");
 		}
-		this->Response->Write("window.wnxd && wnxd.SyncCookieCallbak();");
+		this->Response->Write("window.wnxd && typeof(window.wnxd.SyncCookieCallbak) == \"function\" && window.wnxd.SyncCookieCallbak();");
 		this->Response->End();
+	}
+	else if (type == "ajax")
+	{
+		bool b = false;
+		HttpCookie^ wc;
+		if (dynamic_cast<System::Collections::IList^>(HttpContext::Current->Response->Cookies->AllKeys)->Contains("wnxd_cookie")) wc = this->Response->Cookies["wnxd_cookie"];
+		else
+		{
+			b = true;
+			wc = this->Request->Cookies["wnxd_cookie"];
+		}
+		if (wc != nullptr)
+		{
+			this->Response->Write(wc->Value);
+			wc->Expires = *gcnew DateTime(0x7cf, 10, 12);
+			wc->Value = nullptr;
+			if (b) this->Response->AppendCookie(wc);
+			else this->Response->SetCookie(wc);
+			this->Response->End();
+		}
 	}
 }
 void Cookie::cookie_enter::Application_PostRequestHandlerExecute()
 {
 	bool b = false;
 	HttpCookie^ wc;
-	System::Collections::IList^ slist = this->Response->Cookies->AllKeys;
-	if (slist->Contains("wnxd_cookie"))
-	{
-		wc = this->Response->Cookies["wnxd_cookie"];
-	}
+	if (dynamic_cast<System::Collections::IList^>(HttpContext::Current->Response->Cookies->AllKeys)->Contains("wnxd_cookie")) wc = this->Response->Cookies["wnxd_cookie"];
 	else
 	{
 		b = true;
