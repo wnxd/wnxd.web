@@ -27,8 +27,7 @@ void Cookie::Sync(String^ domain, HttpCookie^ cookie)
 	if (domain->Substring(0, 4) != "http") domain = "http://" + domain;
 	if (domain[domain->Length - 1] != '/') domain += "/";
 	HttpCookie^ wc;
-	System::Collections::IList^ slist = HttpContext::Current->Response->Cookies->AllKeys;
-	if (slist->Contains("wnxd_cookie"))
+	if (dynamic_cast<System::Collections::IList^>(HttpContext::Current->Response->Cookies->AllKeys)->Contains("wnxd_cookie"))
 	{
 		wc = HttpContext::Current->Response->Cookies["wnxd_cookie"];
 	}
