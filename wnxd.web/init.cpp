@@ -99,6 +99,14 @@ HttpSessionState^ Enter::Session::get()
 {
 	return HttpContext::Current->Session;
 }
+String^ Enter::HttpHandlerPath::get()
+{
+	return this->_HttpHandlerPath;
+}
+void Enter::HttpHandlerPath::set(String^ value)
+{
+	this->_HttpHandlerPath = value;
+}
 //public
 void Enter::Init()
 {
@@ -195,13 +203,61 @@ void Init::_callback(String^ method, ...array<Object^>^ parameters)
 		for (int i = 0; i < _enter_list->Count; i++) mi->Invoke(_enter_list[i], nullptr);
 	}
 }
+void Init::_HttpModule_Init()
+{
+	if (_enter_list != nullptr)
+	{
+		for (int i = 0; i < _enter_list->Count; i++)
+		{
+			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(_enter_list[i]);
+			if (HttpModule != nullptr) HttpModule->Init(this->Context->ApplicationInstance);
+		}
+	}
+}
+void Init::_HttpModule_Dispose()
+{
+	if (_enter_list != nullptr)
+	{
+		for (int i = 0; i < _enter_list->Count; i++)
+		{
+			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(_enter_list[i]);
+			if (HttpModule != nullptr) HttpModule->Dispose();
+		}
+	}
+}
+void Init::_HttpHandler()
+{
+	if (_enter_list != nullptr)
+	{
+		for (int i = 0; i < _enter_list->Count; i++)
+		{
+			IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(_enter_list[i]);
+			if (HttpHandler != nullptr && HttpHandler->IsReusable)
+			{
+				String^ HttpHandlerPath = _enter_list[i]->_HttpHandlerPath;
+				if (!String::IsNullOrEmpty(HttpHandlerPath))
+				{
+					HttpHandlerPath = HttpHandlerPath->Replace(".", "\\.")->Replace("*", ".*")->Replace("?", ".?") + "$";
+					Regex^ regex = gcnew Regex(HttpHandlerPath, RegexOptions::IgnoreCase);
+					if (regex->IsMatch(this->Request->Url->AbsolutePath))
+					{
+						HttpHandler->ProcessRequest(this->Context);
+						this->Response->End();
+					}
+				}
+			}
+		}
+	}
+}
 void Init::Application_Start(Object^ sender, EventArgs^ e)
 {
 	this->_callback("Application_Start", sender, e);
+	this->_HttpModule_Init();
 }
 void Init::Application_End(Object^ sender, EventArgs^ e)
 {
 	this->_callback("Application_End", sender, e);
+	this->_HttpModule_Dispose();
 }
 void Init::Application_Error(Object^ sender, EventArgs^ e)
 {
@@ -222,6 +278,7 @@ void Init::Application_AuthorizeRequest(Object^ sender, EventArgs^ e)
 void Init::Application_ResolveRequestCache(Object^ sender, EventArgs^ e)
 {
 	this->_callback("Application_ResolveRequestCache", sender, e);
+	this->_HttpHandler();
 }
 void Init::Application_AcquireRequestState(Object^ sender, EventArgs^ e)
 {

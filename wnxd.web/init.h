@@ -118,6 +118,16 @@ namespace wnxd
 			{
 				HttpSessionState^ get();
 			}
+			/// <summary>
+			/// 设置或读取 HttpHandler 触发地址,当同时继承 IHttpHandler 接口时候,此属性才会生效
+			/// </summary>
+			property String^ HttpHandlerPath
+			{
+				String^ get();
+				void set(String^ value);
+			}
+		internal:
+			String^ _HttpHandlerPath;
 		public:
 			/// <summary>
 			/// 初始化入口类相关配置
@@ -134,6 +144,9 @@ namespace wnxd
 			Type^ _old_type;
 			void _init();
 			void _callback(String^ method, ...array<Object^>^ parameters);
+			void _HttpModule_Init();
+			void _HttpModule_Dispose();
+			void _HttpHandler();
 			void Application_Start(Object^ sender, EventArgs^ e);
 			void Application_End(Object^ sender, EventArgs^ e);
 			void Application_Error(Object^ sender, EventArgs^ e);
