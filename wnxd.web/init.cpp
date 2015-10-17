@@ -210,7 +210,7 @@ void Init::_HttpModule_Init()
 		for (int i = 0; i < _enter_list->Count; i++)
 		{
 			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(_enter_list[i]);
-			if (HttpModule != nullptr) HttpModule->Init(this->Context->ApplicationInstance);
+			if (HttpModule != nullptr) HttpModule->Init(this);
 		}
 	}
 }
@@ -218,10 +218,11 @@ void Init::_HttpModule_Dispose()
 {
 	if (_enter_list != nullptr)
 	{
+		MethodInfo^ Dispose = (IHttpModule::typeid)->GetMethod("Dispose");
 		for (int i = 0; i < _enter_list->Count; i++)
 		{
 			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(_enter_list[i]);
-			if (HttpModule != nullptr) HttpModule->Dispose();
+			if (HttpModule != nullptr) Dispose->Invoke(_enter_list[i], nullptr);
 		}
 	}
 }
