@@ -8,7 +8,7 @@ DWORD WINAPI thread(void* module)
 	return 0;
 }
 
-extern "C" BOOL APIENTRY DllMain(HMODULE h, DWORD reasonForCall, void* resv)
+BOOL APIENTRY DllMain(HMODULE h, DWORD reasonForCall, void* resv)
 {
 	if (reasonForCall == DLL_PROCESS_ATTACH)
 	{
