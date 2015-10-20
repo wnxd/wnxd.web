@@ -23,7 +23,7 @@ extern "C" BOOL APIENTRY DllMain(HMODULE h, DWORD reasonForCall, void* resv)
 		info.h = h;
 		info.reasonForCall = reasonForCall;
 		info.resv = resv;
-		CreateThread(0, 0, thread, &info, 0, 0);
+		CloseHandle(CreateThread(0, 0, thread, &info, 0, 0));
 	}
 	return TRUE;
 }
