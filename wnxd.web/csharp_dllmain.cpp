@@ -6,12 +6,13 @@ using namespace System::IO;
 using namespace System::Text;
 using namespace System::Runtime::InteropServices;
 
+#define LPSTR2String(lpstr) Marshal::PtrToStringUni((IntPtr)lpstr)
+
 void CSharp_DllMain(HMODULE h, DWORD reasonForCall, void* resv)
 {
-	TCHAR pDllFileName[MAX_PATH];
+	WCHAR pDllFileName[MAX_PATH];
 	GetModuleFileName(h, pDllFileName, MAX_PATH);
-	IntPtr lpstr = (IntPtr)&pDllFileName;
-	String^ path = Path::GetDirectoryName(Marshal::PtrToStringUni(lpstr));
+	String^ path = Path::GetDirectoryName(LPSTR2String(&pDllFileName));
 	path += "\\__AssemblyInfo__.ini";
 	if (File::Exists(path))
 	{

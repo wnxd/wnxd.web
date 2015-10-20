@@ -5,16 +5,13 @@ using namespace wnxd::Web;
 using namespace System::Reflection;
 using namespace System::Runtime::InteropServices;
 
-#ifdef UNICODE
-#define GetCSTR(str)  (LPCWSTR)((void*)Marshal::StringToHGlobalUni(str))
-#else
-#define GetCSTR(str)  (LPCSTR)Marshal::StringToHGlobalAnsi(str)
-#endif
+
+#define String2LPSTR(str) (LPCWSTR)((void*)Marshal::StringToHGlobalUni(str))
 //class Resource
 //private
 System::String^ Resource::GetResource(int id)
 {
-	HMODULE hExe = GetModuleHandle(GetCSTR(Assembly::GetExecutingAssembly()->ManifestModule->Name));
+	HMODULE hExe = GetModuleHandle(String2LPSTR(Assembly::GetExecutingAssembly()->ManifestModule->Name));
 	HRSRC hRes = FindResource(hExe, MAKEINTRESOURCE(id), TEXT("JAVASCRIPT"));
 	if (hRes == NULL) return nullptr;
 	HGLOBAL hgRes = LoadResource(hExe, hRes);
