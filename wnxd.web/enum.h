@@ -5,7 +5,7 @@ namespace wnxd
 		/// <summary>
 		/// 查询方式
 		/// </summary>
-		public enum QueryType
+		public enum class QueryType
 		{
 			/// <summary>
 			/// CSS选择语法
