@@ -8,10 +8,10 @@ using namespace System::Runtime::InteropServices;
 
 #define LPSTR2String(lpstr) Marshal::PtrToStringUni((IntPtr)lpstr)
 
-void CSharp_DllMain(HMODULE h, DWORD reasonForCall, void* resv)
+void CSharp_DllMain(HMODULE module)
 {
 	WCHAR pDllFileName[MAX_PATH];
-	GetModuleFileName(h, pDllFileName, MAX_PATH);
+	GetModuleFileName(module, pDllFileName, MAX_PATH);
 	String^ path = Path::GetDirectoryName(LPSTR2String(&pDllFileName));
 	path += "\\__AssemblyInfo__.ini";
 	if (File::Exists(path))
