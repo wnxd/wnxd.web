@@ -73,6 +73,12 @@
     <ClCompile Include="interface.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="csharp_dllmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\cookie.js">

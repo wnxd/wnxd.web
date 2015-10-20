@@ -107,23 +107,32 @@ void Enter::HttpHandlerPath::set(String^ value)
 {
 	this->_HttpHandlerPath = value;
 }
-//public
-void Enter::Init()
+//internal
+void Enter::_Init(String^ dir)
 {
-	String^ path = AppDomain::CurrentDomain->BaseDirectory + "Global.asax";
+	if (String::IsNullOrEmpty(dir)) return;
+	Char c = dir[dir->Length - 1];
+	if (c != '\\' && c != '/') dir += "\\";
+	String^ path = dir + "Global.asax";
+	String^ InitClassName = Init::typeid->FullName;
 	if (File::Exists(path))
 	{
 		String^ str = file::ReadFile(path);
 		Match^ mc = (gcnew Regex("Inherits=\"(.*?)\""))->Match(str);
 		if (mc != nullptr)
 		{
-			if (mc->Groups[1]->Value == "wnxd.Web.Init") return;
-			config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
+			if (mc->Groups[1]->Value == InitClassName) return;
+			config^ config = gcnew wnxd::Config::config(dir + "wnxd\\wnxd_config.tmp");
 			config["old_Global"] = mc->Groups[1]->Value;
 		}
 		File::SetAttributes(path, FileAttributes::Normal);
 	}
-	file::WriteFile(path, "<%@ Application Inherits=\"wnxd.Web.Init\" Language=\"C#\" %>");
+	file::WriteFile(path, "<%@ Application Inherits=\"" + InitClassName + "\" Language=\"C#\" %>");
+}
+//public
+void Enter::Init()
+{
+	_Init(AppDomain::CurrentDomain->BaseDirectory);
 }
 //class Init
 //private

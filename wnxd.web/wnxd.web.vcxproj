@@ -105,6 +105,10 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="cookie.cpp" />
+    <ClCompile Include="csharp_dllmain.cpp" />
+    <ClCompile Include="dllmain.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+    </ClCompile>
     <ClCompile Include="enum.cpp" />
     <ClCompile Include="html.cpp" />
     <ClCompile Include="init.cpp" />

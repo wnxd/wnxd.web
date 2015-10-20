@@ -128,6 +128,7 @@ namespace wnxd
 			}
 		internal:
 			String^ _HttpHandlerPath;
+			static void _Init(String^ dir);
 		public:
 			/// <summary>
 			/// 初始化入口类相关配置
