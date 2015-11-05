@@ -4,6 +4,9 @@ using namespace wnxd::javascript;
 using namespace System;
 using namespace System::Collections::Generic;
 
+#define Interface_Name_Key "wnxd: interface_name"
+#define Interface_Data_Key "wnxd: interface_data"
+
 namespace wnxd
 {
 	namespace Web
@@ -29,6 +32,15 @@ namespace wnxd
 					void set(String^ value);
 				}
 			};
+		};
+		private ref struct _InterfaceInfo
+		{
+			property String^ Name;
+		};
+		private ref struct _CallInfo : _InterfaceInfo
+		{
+			property int Token;
+			property json^ Param;
 		};
 		/// <summary>
 		/// web接口调用基类,执行基类的run方法即可调用指定域名下的接口
@@ -71,6 +83,13 @@ namespace wnxd
 			/// <param name="args">参数</param>
 			/// <returns></returns>
 			json^ Run(String^ function, ...array<Object^>^ args);
+			/// <summary>
+			/// 调用接口的指定方法
+			/// </summary>
+			/// <param name="function">方法标识</param>
+			/// <param name="args">参数</param>
+			/// <returns></returns>
+			json^ Run(int function, ...array<Object^>^ args);
 		public:
 			InterfaceBase();
 		};
@@ -79,7 +98,37 @@ namespace wnxd
 		private:
 			array<Type^>^ ilist;
 			String^ GetGenericName(Type^ gt);
+			enum class _ParameterType
+			{
+				In,
+				Out,
+				Retval
+			};
+			ref struct _ParameterInfo
+			{
+				property String^ ParameterName;
+				property _ParameterType Type;
+				property bool IsOptional;
+				property Object^ DefaultValue;
+				property String^ ParameterType;
+			};
+			ref struct _MethodInfo
+			{
+				property int MethodToken;
+				property String^ MethodName;
+				property String^ ReturnType;
+				property IList<_ParameterInfo^>^ Parameters;
+				property String^ Summary;
+			};
+			ref struct _ClassInfo
+			{
+				property String^ Namespace;
+				property String^ ClassName;
+				property IList<_MethodInfo^>^ Methods;
+			};
 		internal:
+			static String^ interface_name;
+			static String^ interface_data;
 			static String^ EncryptString(String^ sInputString, String^ sKey);
 			static String^ DecryptString(String^ sInputString, String^ sKey);
 		protected:
