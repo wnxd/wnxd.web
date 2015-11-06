@@ -282,7 +282,7 @@ void interface_enter::Application_BeginRequest()
 				}
 				else
 				{
-					if (!String::IsNullOrEmpty(fn) || CallInfo->Hash == 0)
+					if (!String::IsNullOrEmpty(fn) && CallInfo->Hash == 0)
 					{
 						for (int i = 0; this->ilist->Length; i++)
 						{
