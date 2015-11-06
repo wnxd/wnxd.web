@@ -257,12 +257,13 @@ void interface_enter::Application_BeginRequest()
 											ParameterInfo^ pi = pis[y];
 											_ParameterInfo^ tt = gcnew _ParameterInfo();
 											tt->ParameterName = pi->Name;
-											if (pi->IsRetval) tt->Type = _ParameterType::Retval;
+											T = pi->ParameterType;
+											if (pi->IsRetval || T->IsByRef) tt->Type = _ParameterType::Retval;
 											else if (pi->IsOut) tt->Type = _ParameterType::Out;
 											else tt->Type = _ParameterType::In;
 											tt->IsOptional = pi->IsOptional;
 											if (pi->IsOptional) tt->DefaultValue = pi->DefaultValue;
-											T = pi->ParameterType;
+											if (T->IsByRef) T = T->GetElementType();
 											tt->ParameterType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
 											Parameters->Add(tt);
 										}
@@ -307,13 +308,24 @@ void interface_enter::Application_BeginRequest()
 								{
 									json^ fp = CallInfo->Param;
 									array<ParameterInfo^>^ pis = mi->GetParameters();
-									List<Object^>^ args = gcnew List<Object^>();
+									array<Object^>^ args = gcnew array<Object^>(pis->Length);
+									IList<int>^ outparams = gcnew List<int>();
 									for (int n = 0; n < pis->Length; n++)
 									{
-										Object^ o = ((json^)fp[n])->TryConvert(pis[n]->ParameterType);
-										args->Add(o);
+										ParameterInfo^ pi = pis[n];
+										Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
+										args[n] = o;
+										if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
 									}
-									json^ r = gcnew json(mi->Invoke(obj, args->ToArray()));
+									json^ r = gcnew json(mi->Invoke(obj, args));
+									if (outparams->Count > 0)
+									{
+										_OutData^ out = gcnew _OutData();
+										out->OutParams = gcnew List<Object^>();
+										for each (int n in outparams) out->OutParams->Add(args[n]);
+										out->Data = r;
+										r = gcnew json(out);
+									}
 									this->Response->Write(EncryptString(r->ToString(), interface_enter::interface_data));
 									break;
 								}

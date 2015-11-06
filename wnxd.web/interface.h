@@ -123,6 +123,11 @@ namespace wnxd
 				property String^ ClassName;
 				property IList<_MethodInfo^>^ Methods;
 			};
+			ref struct _OutData
+			{
+				property IList<Object^>^ OutParams;
+				property json^ Data;
+			};
 		internal:
 			static String^ interface_name;
 			static String^ interface_data;
