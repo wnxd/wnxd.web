@@ -33,13 +33,10 @@ namespace wnxd
 				}
 			};
 		};
-		private ref struct _InterfaceInfo
+		private ref struct _CallInfo
 		{
+			property int Hash;
 			property String^ Name;
-		};
-		private ref struct _CallInfo : _InterfaceInfo
-		{
-			property int Token;
 			property json^ Param;
 		};
 		/// <summary>
@@ -114,7 +111,7 @@ namespace wnxd
 			};
 			ref struct _MethodInfo
 			{
-				property int MethodToken;
+				property int MethodHash;
 				property String^ MethodName;
 				property String^ ReturnType;
 				property IList<_ParameterInfo^>^ Parameters;

@@ -86,7 +86,7 @@ json^ InterfaceBase::Run(int function, ...array<Object^>^ args)
 	try
 	{
 		_CallInfo^ CallInfo = gcnew _CallInfo();
-		CallInfo->Token = function;
+		CallInfo->Hash = function;
 		CallInfo->Param = gcnew json(args);
 		json^ param = gcnew json(CallInfo);
 		WebRequest^ request = WebRequest::Create(this->interface_url);
@@ -220,8 +220,8 @@ void interface_enter::Application_BeginRequest()
 				name = DecryptString(HttpUtility::UrlDecode(name), interface_enter::interface_name);
 				param = DecryptString(param, interface_enter::interface_data);
 				json^ info = gcnew json(param);
-				_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
-				String^ fn = InterfaceInfo->Name;
+				_CallInfo^ CallInfo = (_CallInfo^)info->TryConvert(_CallInfo::typeid);
+				String^ fn = CallInfo->Name;
 				if (name == "$query$")
 				{
 					json^ r = gcnew json();
@@ -246,7 +246,7 @@ void interface_enter::Application_BeginRequest()
 									{
 										MethodInfo^ mi = mis[x];
 										_MethodInfo^ t = gcnew _MethodInfo();
-										t->MethodToken = mi->MetadataToken;
+										t->MethodHash = mi->GetHashCode();
 										t->MethodName = mi->Name;
 										Type^ T = mi->ReturnType;
 										t->ReturnType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
@@ -282,9 +282,8 @@ void interface_enter::Application_BeginRequest()
 				}
 				else
 				{
-					if (!String::IsNullOrEmpty(fn))
+					if (!String::IsNullOrEmpty(fn) || CallInfo->Hash == 0)
 					{
-						_CallInfo^ CallInfo = (_CallInfo^)info->TryConvert(_CallInfo::typeid);
 						for (int i = 0; this->ilist->Length; i++)
 						{
 							Type^ T = this->ilist[i];
@@ -292,12 +291,12 @@ void interface_enter::Application_BeginRequest()
 							{
 								Interface^ obj = (Interface^)Activator::CreateInstance(T);
 								MethodInfo^ mi;
-								if (CallInfo->Token == 0) mi = T->GetMethod(fn);
+								if (CallInfo->Hash == 0) mi = T->GetMethod(fn);
 								else
 								{
 									for each (MethodInfo^ item in T->GetMethods())
 									{
-										if (item->MetadataToken == CallInfo->Token)
+										if (item->GetHashCode() == CallInfo->Hash)
 										{
 											mi = item;
 											break;
