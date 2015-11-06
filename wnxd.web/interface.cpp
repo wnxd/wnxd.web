@@ -86,7 +86,7 @@ json^ InterfaceBase::Run(int function, ...array<Object^>^ args)
 	try
 	{
 		_CallInfo^ CallInfo = gcnew _CallInfo();
-		CallInfo->Hash = function;
+		CallInfo->Token = function;
 		CallInfo->Param = gcnew json(args);
 		json^ param = gcnew json(CallInfo);
 		WebRequest^ request = WebRequest::Create(this->interface_url);
@@ -246,7 +246,7 @@ void interface_enter::Application_BeginRequest()
 									{
 										MethodInfo^ mi = mis[x];
 										_MethodInfo^ t = gcnew _MethodInfo();
-										t->MethodHash = mi->GetHashCode();
+										t->MethodToken = mi->MetadataToken;
 										t->MethodName = mi->Name;
 										Type^ T = mi->ReturnType;
 										t->ReturnType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
@@ -282,7 +282,7 @@ void interface_enter::Application_BeginRequest()
 				}
 				else
 				{
-					if (!String::IsNullOrEmpty(fn) && CallInfo->Hash == 0)
+					if (!String::IsNullOrEmpty(fn) || CallInfo->Token != 0)
 					{
 						for (int i = 0; this->ilist->Length; i++)
 						{
@@ -291,12 +291,12 @@ void interface_enter::Application_BeginRequest()
 							{
 								Interface^ obj = (Interface^)Activator::CreateInstance(T);
 								MethodInfo^ mi;
-								if (CallInfo->Hash == 0) mi = T->GetMethod(fn);
+								if (CallInfo->Token == 0) mi = T->GetMethod(fn);
 								else
 								{
 									for each (MethodInfo^ item in T->GetMethods())
 									{
-										if (item->GetHashCode() == CallInfo->Hash)
+										if (item->MetadataToken == CallInfo->Token)
 										{
 											mi = item;
 											break;

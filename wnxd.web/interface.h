@@ -35,7 +35,7 @@ namespace wnxd
 		};
 		private ref struct _CallInfo
 		{
-			property int Hash;
+			property int Token;
 			property String^ Name;
 			property json^ Param;
 		};
@@ -111,7 +111,7 @@ namespace wnxd
 			};
 			ref struct _MethodInfo
 			{
-				property int MethodHash;
+				property int MethodToken;
 				property String^ MethodName;
 				property String^ ReturnType;
 				property IList<_ParameterInfo^>^ Parameters;
