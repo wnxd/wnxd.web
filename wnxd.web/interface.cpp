@@ -258,8 +258,8 @@ void interface_enter::Application_BeginRequest()
 											_ParameterInfo^ tt = gcnew _ParameterInfo();
 											tt->ParameterName = pi->Name;
 											T = pi->ParameterType;
-											if (pi->IsRetval || T->IsByRef) tt->Type = _ParameterType::Retval;
-											else if (pi->IsOut) tt->Type = _ParameterType::Out;
+											if (pi->IsOut) tt->Type = _ParameterType::Out;
+											else if (pi->IsRetval || T->IsByRef) tt->Type = _ParameterType::Retval;
 											else tt->Type = _ParameterType::In;
 											tt->IsOptional = pi->IsOptional;
 											if (pi->IsOptional) tt->DefaultValue = pi->DefaultValue;
