@@ -81,38 +81,6 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 	}
 	return gcnew json();
 }
-json^ InterfaceBase::Run(int function, ...array<Object^>^ args)
-{
-	try
-	{
-		_CallInfo^ CallInfo = gcnew _CallInfo();
-		CallInfo->Token = function;
-		CallInfo->Param = gcnew json(args);
-		json^ param = gcnew json(CallInfo);
-		WebRequest^ request = WebRequest::Create(this->interface_url);
-		request->Method = "POST";
-		request->ContentType = "application/x-www-form-urlencoded";
-		array<Byte>^ data = Encoding::UTF8->GetBytes(interface_enter::EncryptString(param->ToString(), interface_enter::interface_data));
-		request->ContentLength = data->Length;
-		Stream^ dataStream = request->GetRequestStream();
-		dataStream->Write(data, 0, data->Length);
-		dataStream->Flush();
-		dataStream->Close();
-		WebResponse^ response = request->GetResponse();
-		dataStream = response->GetResponseStream();
-		StreamReader^ reader = gcnew StreamReader(dataStream);
-		String^ responseData = reader->ReadToEnd();
-		reader->Close();
-		dataStream->Close();
-		response->Close();
-		if (!String::IsNullOrEmpty(responseData)) return gcnew json(interface_enter::DecryptString(responseData, interface_enter::interface_data));
-	}
-	catch (...)
-	{
-
-	}
-	return gcnew json();
-}
 void InterfaceBase::init()
 {
 	if (String::IsNullOrEmpty(this->_domain))
@@ -191,21 +159,29 @@ void interface_enter::Initialize()
 	interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
 	if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
 	if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
-	List<Type^>^ l = gcnew List<Type^>();
+	IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ l = gcnew Dictionary<Type^, IDictionary<String^, MethodInfo^>^>();
 	array<Assembly^>^ list = Init::GetAllAssembly();
-	for (int i = 0; i < list->Length; i++)
+	for each (Assembly^ assembly in list)
 	{
 		try
 		{
-			array<Type^>^ tlist = list[i]->GetTypes();
-			for (int n = 0; n < tlist->Length; n++) if (Interface::typeid->IsAssignableFrom(tlist[n]) && tlist[n] != Interface::typeid) l->Add(tlist[n]);
+			array<Type^>^ tlist = assembly->GetTypes();
+			for each (Type^ type in tlist)
+			{
+				if (Interface::typeid->IsAssignableFrom(type) && type != Interface::typeid)
+				{
+					IDictionary<String^, MethodInfo^>^ dic = gcnew Dictionary<String^, MethodInfo^>();
+					for each (MethodInfo^ method in type->GetMethods(BindingFlags::Instance | BindingFlags::Public | BindingFlags::DeclaredOnly)) dic->Add(FormsAuthentication::HashPasswordForStoringInConfigFile(method->ToString(), "md5"), method);
+					l->Add(type, dic);
+				}
+			}
 		}
 		catch (...)
 		{
 
 		}
 	}
-	this->ilist = l->ToArray();
+	this->ilist = l;
 }
 void interface_enter::Application_BeginRequest()
 {
@@ -225,7 +201,7 @@ void interface_enter::Application_BeginRequest()
 				if (name == "$query$")
 				{
 					json^ r = gcnew json();
-					if (fn == "interface_name") for (int i = 0; i < this->ilist->Length; i++) r->push(this->ilist[i]->FullName);
+					if (fn == "interface_name") for each (Type^ type in this->ilist->Keys) r->push(type->FullName);
 					else if (fn == "interface_info")
 					{
 						Array^ EmptyArray = gcnew array<json^>(0);
@@ -233,20 +209,19 @@ void interface_enter::Application_BeginRequest()
 						for (int i = 0; i < list->length.Value; i++)
 						{
 							name = (String^)((json^)list[i])->TryConvert(String::typeid);
-							for (int n = 0; n < this->ilist->Length; n++)
+							for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
 							{
-								if (this->ilist[n]->FullName == name)
+								if (item->Key->FullName == name)
 								{
 									_ClassInfo^ d = gcnew _ClassInfo();
-									d->Namespace = this->ilist[n]->Namespace;
-									d->ClassName = this->ilist[n]->Name;
+									d->Namespace = item->Key->Namespace;
+									d->ClassName = item->Key->Name;
 									IList<_MethodInfo^>^ Methods = gcnew List<_MethodInfo^>();
-									array<MethodInfo^>^ mis = this->ilist[n]->GetMethods(BindingFlags::Instance | BindingFlags::Public | BindingFlags::DeclaredOnly);
-									for (int x = 0; x < mis->Length; x++)
+									for each (KeyValuePair<String^, MethodInfo^>^ item2 in item->Value)
 									{
-										MethodInfo^ mi = mis[x];
+										MethodInfo^ mi = item2->Value;
 										_MethodInfo^ t = gcnew _MethodInfo();
-										t->MethodToken = mi->MetadataToken;
+										t->MethodToken = item2->Key;
 										t->MethodName = mi->Name;
 										Type^ T = mi->ReturnType;
 										t->ReturnType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
@@ -274,6 +249,7 @@ void interface_enter::Application_BeginRequest()
 									}
 									d->Methods = Methods;
 									r->push(d);
+									break;
 								}
 							}
 						}
@@ -283,27 +259,17 @@ void interface_enter::Application_BeginRequest()
 				}
 				else
 				{
-					if (!String::IsNullOrEmpty(fn) || CallInfo->Token != 0)
+					if (!String::IsNullOrEmpty(fn))
 					{
-						for (int i = 0; this->ilist->Length; i++)
+						for each (KeyValuePair<Type^,IDictionary<String^,MethodInfo^>^>^ item in this->ilist)
 						{
-							Type^ T = this->ilist[i];
-							if (T->FullName == name || T->Name == name)
+							Type^ type = item->Key;
+							if (type->FullName == name || type->Name == name)
 							{
-								Interface^ obj = (Interface^)Activator::CreateInstance(T);
+								Interface^ obj = (Interface^)Activator::CreateInstance(type);
 								MethodInfo^ mi;
-								if (CallInfo->Token == 0) mi = T->GetMethod(fn);
-								else
-								{
-									for each (MethodInfo^ item in T->GetMethods())
-									{
-										if (item->MetadataToken == CallInfo->Token)
-										{
-											mi = item;
-											break;
-										}
-									}
-								}
+								if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
+								else mi = type->GetMethod(fn);
 								if (mi != nullptr)
 								{
 									json^ fp = CallInfo->Param;

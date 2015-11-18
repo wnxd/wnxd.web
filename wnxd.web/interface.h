@@ -35,7 +35,6 @@ namespace wnxd
 		};
 		private ref struct _CallInfo
 		{
-			property int Token;
 			property String^ Name;
 			property json^ Param;
 		};
@@ -80,20 +79,13 @@ namespace wnxd
 			/// <param name="args">参数</param>
 			/// <returns></returns>
 			json^ Run(String^ function, ...array<Object^>^ args);
-			/// <summary>
-			/// 调用接口的指定方法
-			/// </summary>
-			/// <param name="function">方法标识</param>
-			/// <param name="args">参数</param>
-			/// <returns></returns>
-			json^ Run(int function, ...array<Object^>^ args);
 		public:
 			InterfaceBase();
 		};
 		private ref class interface_enter : Enter
 		{
 		private:
-			array<Type^>^ ilist;
+			IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ ilist;
 			String^ GetGenericName(Type^ gt);
 			enum class _ParameterType
 			{
@@ -111,7 +103,7 @@ namespace wnxd
 			};
 			ref struct _MethodInfo
 			{
-				property int MethodToken;
+				property String^ MethodToken;
 				property String^ MethodName;
 				property String^ ReturnType;
 				property IList<_ParameterInfo^>^ Parameters;
