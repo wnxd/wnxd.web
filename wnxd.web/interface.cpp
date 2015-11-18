@@ -106,6 +106,13 @@ void InterfaceBase::init()
 //public
 InterfaceBase::InterfaceBase()
 {
+	if (String::IsNullOrEmpty(interface_enter::interface_name))
+	{
+		interface_enter::interface_name = WebConfigurationManager::AppSettings["Interface_Name_Key"];
+		interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
+		if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
+		if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
+	}
 	init();
 }
 //class interface_enter
