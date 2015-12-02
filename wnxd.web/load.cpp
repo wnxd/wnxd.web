@@ -34,7 +34,7 @@ bool Load::_SaveHtml()
 	if (b)
 	{
 		if (node->Attributes["time"] == nullptr) node->SetAttribute("time", DateTime::Now.AddDays(1).Ticks.ToString());
-		else node->Attributes["time"]->Value = DateTime::Now.AddDays(1).Ticks.ToString();
+		else node->Attributes["time"]->Value = DateTime::Now.AddHours(this->_cache).Ticks.ToString();
 		StringBuilder^ html = gcnew StringBuilder();
 		StringWriter^ sw = gcnew StringWriter(html);
 		HtmlTextWriter^ htw = gcnew HtmlTextWriter(sw);
@@ -102,9 +102,18 @@ void Load::Threshold::set(int value)
 {
 	this->_threshold = value;
 }
+int Load::Cache::get()
+{
+	return this->_cache;
+}
+void Load::Cache::set(int value)
+{
+	this->_cache = value;
+}
 Load::Load()
 {
 	this->_threshold = 200;
+	this->_cache = 24;
 	String^ path = this->MapPathSecure("~/wnxd/");
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
 	if (!File::Exists(path + "wnxd_load.tmp")) file::WriteFile(path + "wnxd_load.tmp", "<wnxd></wnxd>");

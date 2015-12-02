@@ -16,7 +16,7 @@ namespace wnxd
 			protected:
 				virtual void Application_BeginRequest() override;
 			};
-			int _threshold;
+			int _threshold, _cache;
 			bool _jump, _refresh;
 			bool _SaveHtml();
 			static Load^ _FindFirst(Control^ control);
@@ -26,6 +26,11 @@ namespace wnxd
 			bool Insert;
 		public:
 			property int Threshold
+			{
+				int get();
+				void set(int value);
+			}
+			property int Cache
 			{
 				int get();
 				void set(int value);
