@@ -224,9 +224,9 @@ void Init::_HttpModule_Init()
 {
 	if (_enter_list != nullptr)
 	{
-		for (int i = 0; i < _enter_list->Count; i++)
+		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
-			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(_enter_list[i]);
+			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
 			if (HttpModule != nullptr) HttpModule->Init(this);
 		}
 	}
@@ -236,10 +236,10 @@ void Init::_HttpModule_Dispose()
 	if (_enter_list != nullptr)
 	{
 		MethodInfo^ Dispose = (IHttpModule::typeid)->GetMethod("Dispose");
-		for (int i = 0; i < _enter_list->Count; i++)
+		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
-			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(_enter_list[i]);
-			if (HttpModule != nullptr) Dispose->Invoke(_enter_list[i], nullptr);
+			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
+			if (HttpModule != nullptr) Dispose->Invoke(kv->Value, nullptr);
 		}
 	}
 }
@@ -247,12 +247,12 @@ void Init::_HttpHandler()
 {
 	if (_enter_list != nullptr)
 	{
-		for (int i = 0; i < _enter_list->Count; i++)
+		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
-			IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(_enter_list[i]);
+			IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(kv->Value);
 			if (HttpHandler != nullptr && HttpHandler->IsReusable)
 			{
-				String^ HttpHandlerPath = _enter_list[i]->_HttpHandlerPath;
+				String^ HttpHandlerPath = kv->Value->_HttpHandlerPath;
 				if (!String::IsNullOrEmpty(HttpHandlerPath))
 				{
 					HttpHandlerPath = HttpHandlerPath->Replace(".", "\\.")->Replace("*", ".*")->Replace("?", ".?") + "$";
