@@ -167,7 +167,7 @@ namespace wnxd
 			void Session_End(Object^ sender, EventArgs^ e);
 			void Application_Disposed(Object^ sender, EventArgs^ e);
 		internal:
-			static IList<Enter^>^ _enter_list;
+			static IDictionary<Type^, Enter^>^ _enter_list;
 			static array<Assembly^>^ GetAllAssembly();
 		protected:
 			Init();

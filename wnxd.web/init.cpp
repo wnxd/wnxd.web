@@ -141,7 +141,7 @@ void Init::_init()
 	array<Assembly^>^ list = GetAllAssembly();
 	config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
 	String^ className = config["old_Global"];
-	_enter_list = gcnew List<Enter^>();
+	_enter_list = gcnew Dictionary<Type^, Enter^>();
 	for (int i = 0; i < list->Length; i++)
 	{
 		if (this->_old_app == nullptr && !String::IsNullOrEmpty(className))
@@ -157,10 +157,7 @@ void Init::_init()
 				{
 
 				}
-				if (this->_old_app != nullptr)
-				{
-					this->_old_type = T;
-				}
+				if (this->_old_app != nullptr) this->_old_type = T;
 			}
 		}
 		try
@@ -168,10 +165,11 @@ void Init::_init()
 			array<Type^>^ tlist = list[i]->GetTypes();
 			for (int n = 0; n < tlist->Length; n++)
 			{
-				if (Enter::typeid->IsAssignableFrom(tlist[n]) && tlist[n] != Enter::typeid)
+				Type^ T = tlist[n];
+				if (Enter::typeid->IsAssignableFrom(T) && T != Enter::typeid)
 				{
-					Enter^ e = (Enter^)Activator::CreateInstance(tlist[n]);
-					if (e != nullptr) _enter_list->Add(e);
+					Enter^ e = (Enter^)Activator::CreateInstance(T);
+					if (e != nullptr) _enter_list->Add(T, e);
 				}
 			}
 		}
@@ -209,7 +207,17 @@ void Init::_callback(String^ method, ...array<Object^>^ parameters)
 	if (_enter_list != nullptr)
 	{
 		MethodInfo^ mi = Enter::typeid->GetMethod(method, all, nullptr, Type::EmptyTypes, nullptr);
-		for (int i = 0; i < _enter_list->Count; i++) mi->Invoke(_enter_list[i], nullptr);
+		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
+		{
+			Enter^ obj = kv->Value;
+			if (obj == nullptr)
+			{
+				obj = (Enter^)Activator::CreateInstance(kv->Key);
+				if (obj == nullptr) continue;
+				else _enter_list[kv->Key] = obj;
+			}
+			mi->Invoke(obj, nullptr);
+		}
 	}
 }
 void Init::_HttpModule_Init()
