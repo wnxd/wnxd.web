@@ -110,7 +110,7 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 			}
 			catch (FileNotFoundException^ ex)
 			{
-
+				goto open;
 			}
 			catch (...)
 			{
@@ -138,7 +138,6 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 
 			}
 		} while (true);
-	run:
 		r = this->Run(function, args);
 		if (json::operator==(r, js::undefined))
 		{
