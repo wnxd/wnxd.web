@@ -1,8 +1,6 @@
 #include "interface.h"
-#include "config.h"
 
 using namespace wnxd::Web;
-using namespace wnxd::Config;
 using namespace System::Reflection;
 using namespace System::Text;
 using namespace System::Web::Security;
@@ -100,18 +98,50 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
 	path += FormsAuthentication::HashPasswordForStoringInConfigFile((gcnew json(args))->ToString(), "md5") + ".tmp";
 	json^ r;
+	FileStream^ fs;
 	if (File::Exists(path))
 	{
+		do
+		{
+			try
+			{
+				fs = File::Open(path, FileMode::Open, FileAccess::ReadWrite, FileShare::None);
+				break;
+			}
+			catch (...)
+			{
+
+			}
+		} while (true);
 		TimeSpan t = DateTime::Now - File::GetLastWriteTime(path);
-		if (t.TotalSeconds > time) goto run;
-		r = gcnew json(file::ReadFile(path));
+		if (t.TotalSeconds > time) goto open;
+		StreamReader^ sr = gcnew StreamReader(fs);
+		r = gcnew json(sr->ReadToEnd());
+		delete sr;
+		if (json::operator==(r, js::undefined)) goto run;
 	}
 	else
 	{
+	open:
+		do
+		{
+			try
+			{
+				fs = File::Open(path, FileMode::Create, FileAccess::Write, FileShare::None);
+				break;
+			}
+			catch (...)
+			{
+
+			}
+		} while (true);
 	run:
 		r = this->Run(function, args);
-		file::WriteFile(path, r->ToString());
+		StreamWriter^ sw = gcnew StreamWriter(fs);
+		sw->Write(r->ToString());
+		delete sw;
 	}
+	delete fs;
 	return r;
 }
 void InterfaceBase::init()
@@ -345,7 +375,7 @@ void interface_enter::Application_BeginRequest()
 			}
 			catch (...)
 			{
-
+				this->Response->End();
 			}
 		}
 	}
