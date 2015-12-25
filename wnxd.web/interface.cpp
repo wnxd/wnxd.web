@@ -105,8 +105,12 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 		{
 			try
 			{
-				fs = File::Open(path, FileMode::Open, FileAccess::ReadWrite, FileShare::None);
+				fs = File::Open(path, FileMode::Open, FileAccess::Read, FileShare::None);
 				break;
+			}
+			catch (FileNotFoundException^ ex)
+			{
+
 			}
 			catch (...)
 			{
@@ -118,7 +122,6 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 		StreamReader^ sr = gcnew StreamReader(fs);
 		r = gcnew json(sr->ReadToEnd());
 		delete sr;
-		if (json::operator==(r, js::undefined)) goto run;
 	}
 	else
 	{
@@ -137,9 +140,17 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 		} while (true);
 	run:
 		r = this->Run(function, args);
-		StreamWriter^ sw = gcnew StreamWriter(fs);
-		sw->Write(r->ToString());
-		delete sw;
+		if (json::operator==(r, js::undefined))
+		{
+			delete fs;
+			File::Delete(path);
+		}
+		else
+		{
+			StreamWriter^ sw = gcnew StreamWriter(fs);
+			sw->Write(r->ToString());
+			delete sw;
+		}
 	}
 	delete fs;
 	return r;
