@@ -94,7 +94,7 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 	}
 	return gcnew json();
 }
-json ^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ args)
+json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ args)
 {
 	String^ path = AppDomain::CurrentDomain->BaseDirectory + "wnxd\\interface\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(this->interface_url, "md5") + "\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(function, "md5") + "\\";
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
