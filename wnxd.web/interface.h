@@ -26,10 +26,31 @@ namespace wnxd
 			private:
 				String^ _summary;
 			public:
+				/// <summary>
+				/// 接口方法的备注信息
+				/// </summary>
 				property String^ summary
 				{
 					String^ get();
 					void set(String^ value);
+				}
+			};
+			/// <summary>
+			/// 此属性可以为web接口的方法添加缓存功能,默认缓存时间为1800秒
+			/// </summary>
+			[AttributeUsage(AttributeTargets::Method)]
+			ref class MethodCacheAttribute sealed : Attribute
+			{
+			private:
+				int _time = 1800;
+			public:
+				/// <summary>
+				/// 接口方法的数据缓存时间,单位为秒
+				/// </summary>
+				property int time
+				{
+					int get();
+					void set(int value);
 				}
 			};
 		};
@@ -79,6 +100,7 @@ namespace wnxd
 			/// <param name="args">参数</param>
 			/// <returns></returns>
 			json^ Run(String^ function, ...array<Object^>^ args);
+			json^ GetCache(int time, String^ function, ...array<Object^>^ args);
 		public:
 			InterfaceBase();
 		};
@@ -108,6 +130,7 @@ namespace wnxd
 				property String^ ReturnType;
 				property IList<_ParameterInfo^>^ Parameters;
 				property String^ Summary;
+				property Nullable<int> CacheTime;
 			};
 			ref struct _ClassInfo
 			{

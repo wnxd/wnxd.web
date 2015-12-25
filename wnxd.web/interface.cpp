@@ -1,6 +1,8 @@
 #include "interface.h"
+#include "config.h"
 
 using namespace wnxd::Web;
+using namespace wnxd::Config;
 using namespace System::Reflection;
 using namespace System::Text;
 using namespace System::Web::Security;
@@ -10,6 +12,7 @@ using namespace System::Web::Configuration;
 using namespace System::Net;
 using namespace System::IO;
 using namespace System::Text::RegularExpressions;
+using namespace System::Diagnostics;
 //class MethodAttribute
 //public
 String^ Interface::MethodAttribute::summary::get()
@@ -19,6 +22,16 @@ String^ Interface::MethodAttribute::summary::get()
 void Interface::MethodAttribute::summary::set(String^ value)
 {
 	this->_summary = value;
+}
+//class MethodCacheAttribute
+//public
+int Interface::MethodCacheAttribute::time::get()
+{
+	return this->_time;
+}
+void Interface::MethodCacheAttribute::time::set(int value)
+{
+	this->_time = value;
 }
 //class InterfaceBase
 //protected
@@ -80,6 +93,26 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 
 	}
 	return gcnew json();
+}
+json ^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ args)
+{
+	String^ path = AppDomain::CurrentDomain->BaseDirectory + "wnxd\\interface\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(this->interface_url, "md5") + "\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(function, "md5") + "\\";
+	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
+	path += FormsAuthentication::HashPasswordForStoringInConfigFile((gcnew json(args))->ToString(), "md5") + ".tmp";
+	json^ r;
+	if (File::Exists(path))
+	{
+		TimeSpan t = DateTime::Now - File::GetLastWriteTime(path);
+		if (t.TotalSeconds > time) goto run;
+		r = gcnew json(file::ReadFile(path));
+	}
+	else
+	{
+	run:
+		r = this->Run(function, args);
+		file::WriteFile(path, r->ToString());
+	}
+	return r;
 }
 void InterfaceBase::init()
 {
@@ -250,8 +283,10 @@ void interface_enter::Application_BeginRequest()
 											Parameters->Add(tt);
 										}
 										t->Parameters = Parameters;
-										array<Interface::MethodAttribute^>^ Attributes = (array<Interface::MethodAttribute^>^)mi->GetCustomAttributes(Interface::MethodAttribute::typeid, true);
-										if (Attributes->Length > 0) t->Summary = Attributes[0]->summary;
+										array<Interface::MethodAttribute^>^ Summary = (array<Interface::MethodAttribute^>^)mi->GetCustomAttributes(Interface::MethodAttribute::typeid, true);
+										if (Summary->Length > 0) t->Summary = Summary[0]->summary;
+										array<Interface::MethodCacheAttribute^>^ Time = (array<Interface::MethodCacheAttribute^>^)mi->GetCustomAttributes(Interface::MethodCacheAttribute::typeid, true);
+										if (Time->Length > 0) t->CacheTime = Time[0]->time;
 										Methods->Add(t);
 									}
 									d->Methods = Methods;
@@ -268,7 +303,7 @@ void interface_enter::Application_BeginRequest()
 				{
 					if (!String::IsNullOrEmpty(fn))
 					{
-						for each (KeyValuePair<Type^,IDictionary<String^,MethodInfo^>^>^ item in this->ilist)
+						for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
 						{
 							Type^ type = item->Key;
 							if (type->FullName == name || type->Name == name)
