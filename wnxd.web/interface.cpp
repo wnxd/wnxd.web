@@ -98,60 +98,19 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
 	path += FormsAuthentication::HashPasswordForStoringInConfigFile((gcnew json(args))->ToString(), "md5") + ".tmp";
 	json^ r;
-	FileStream^ fs;
 	if (File::Exists(path))
 	{
-		do
-		{
-			try
-			{
-				fs = File::Open(path, FileMode::Open, FileAccess::Read, FileShare::Read);
-				break;
-			}
-			catch (FileNotFoundException^ ex)
-			{
-				goto open;
-			}
-			catch (...)
-			{
-
-			}
-		} while (true);
 		TimeSpan t = DateTime::Now - File::GetLastWriteTime(path);
-		if (t.TotalSeconds > time) goto open;
-		StreamReader^ sr = gcnew StreamReader(fs);
-		r = gcnew json(sr->ReadToEnd());
-		delete sr;
+		if (t.TotalSeconds > time) goto run;
+		r = gcnew json(File::ReadAllText(path));
+		if (json::operator==(r, js::undefined)) goto run;
 	}
 	else
 	{
-	open:
-		do
-		{
-			try
-			{
-				fs = File::Open(path, FileMode::Create, FileAccess::Write, FileShare::None);
-				break;
-			}
-			catch (...)
-			{
-
-			}
-		} while (true);
+	run:
 		r = this->Run(function, args);
-		if (json::operator==(r, js::undefined))
-		{
-			delete fs;
-			File::Delete(path);
-		}
-		else
-		{
-			StreamWriter^ sw = gcnew StreamWriter(fs);
-			sw->Write(r->ToString());
-			delete sw;
-		}
+		File::WriteAllText(path, r->ToString());
 	}
-	delete fs;
 	return r;
 }
 void InterfaceBase::init()
