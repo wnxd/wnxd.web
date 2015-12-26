@@ -105,7 +105,7 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 		{
 			try
 			{
-				fs = File::Open(path, FileMode::Open, FileAccess::Read, FileShare::None);
+				fs = File::Open(path, FileMode::Open, FileAccess::Read, FileShare::Read);
 				break;
 			}
 			catch (FileNotFoundException^ ex)
