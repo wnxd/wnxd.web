@@ -142,7 +142,7 @@ void Load::load_enter::Application_BeginRequest()
 	if (!String::IsNullOrEmpty(id))
 	{
 		cache^ c = gcnew cache("load", 0);
-		String^ html = c->Read(HttpContext::Current->Request->Url->PathAndQuery, id);
+		String^ html = c->Read(this->Request->Url->PathAndQuery, id);
 		if (!String::IsNullOrWhiteSpace(html))
 		{
 			this->Response->Write(HttpUtility::UrlDecode(html));
