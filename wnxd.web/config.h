@@ -34,7 +34,6 @@ namespace wnxd
 			String^ Read(String^ item, String^ key);
 			void Write(String^ key, String^ val);
 			void Write(String^ item, String^ key, String^ val);
-			TimeSpan Get
 		};
 		ref class file
 		{
