@@ -97,11 +97,12 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ args)
 {
 	cache^ c = gcnew cache("interface", time);
-	json^ r = gcnew json(c->Read(this->interface_url, function));
+	String^ key = (gcnew json(args))->ToString();
+	json^ r = gcnew json(c->Read(this->interface_url, function, key));
 	if (json::operator==(r, js::undefined))
 	{
 		r = this->Run(function, args);
-		c->Write(this->interface_url, function, r->ToString());
+		c->Write(this->interface_url, function, key, r->ToString());
 	}
 	return r;
 }

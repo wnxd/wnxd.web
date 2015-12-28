@@ -82,23 +82,21 @@ cache::cache(String^ name, double time)
 }
 String^ cache::Read(String^ key)
 {
-	String^ path = this->_path + FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
-	if (File::Exists(path))
-	{
-		config^ c = gcnew config(path);
-		TimeSpan t = DateTime::Now - File::GetLastWriteTime(path);
-		if (this->_time == 0)
-		{
-			String^ v = c->GetAttr("cache", "time");
-			if (v == nullptr || !double::TryParse(v, this->_time)) return nullptr;
-		}
-		if (t.TotalSeconds <= this->_time) return c->Read("cache");
-	}
-	return nullptr;
+	return this->Read((array<String^>^)nullptr, key);
 }
 String^ cache::Read(String^ item, String^ key)
 {
-	String^ path = this->_path + FormsAuthentication::HashPasswordForStoringInConfigFile(item, "md5") + "\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
+	return this->Read(gcnew array<String^> { item }, key);
+}
+String^ cache::Read(String^ item, String^ item2, String^ key)
+{
+	return this->Read(gcnew array<String^> { item, item2 }, key);
+}
+String^ cache::Read(array<String^>^ items, String^ key)
+{
+	String^ path = this->_path;
+	if (items != nullptr && items->Length > 0) for each (String^ item in items) path += FormsAuthentication::HashPasswordForStoringInConfigFile(item, "md5") + "\\";
+	path += FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
 	if (File::Exists(path))
 	{
 		config^ c = gcnew config(path);
@@ -114,17 +112,20 @@ String^ cache::Read(String^ item, String^ key)
 }
 void cache::Write(String^ key, String^ val)
 {
-	String^ path = this->_path;
-	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
-	path += FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
-	config^ c = gcnew config(path);
-	c->Write("cache", val);
-	c->SetAttr("cache", "time", this->_time.ToString());
-	delete c;
+	return this->Write((array<String^>^)nullptr, key, val);
 }
 void cache::Write(String^ item, String^ key, String^ val)
 {
-	String^ path = this->_path + FormsAuthentication::HashPasswordForStoringInConfigFile(item, "md5") + "\\";
+	return this->Write(gcnew array<String^> { item }, key, val);
+}
+void cache::Write(String^ item, String^ item2, String^ key, String^ val)
+{
+	return this->Write(gcnew array<String^> { item, item2 }, key, val);
+}
+void cache::Write(array<String^>^ items, String^ key, String^ val)
+{
+	String^ path = this->_path;
+	if (items != nullptr && items->Length > 0) for each (String^ item in items) path += FormsAuthentication::HashPasswordForStoringInConfigFile(item, "md5") + "\\";
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
 	path += FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
 	config^ c = gcnew config(path);

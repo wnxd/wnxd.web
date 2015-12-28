@@ -32,8 +32,12 @@ namespace wnxd
 			cache(String^ name, double time);
 			String^ Read(String^ key);
 			String^ Read(String^ item, String^ key);
+			String^ Read(String^ item, String^ item2, String^ key);
+			String^ Read(array<String^>^ items, String^ key);
 			void Write(String^ key, String^ val);
 			void Write(String^ item, String^ key, String^ val);
+			void Write(String^ item, String^ item2, String^ key, String^ val);
+			void Write(array<String^>^ items, String^ key, String^ val);
 		};
 		ref class file
 		{
