@@ -4,54 +4,30 @@
 
 using namespace wnxd::Web;
 using namespace wnxd::Config;
-using namespace System::Xml;
 using namespace System::Text;
 using namespace System::IO;
 //class Load
 //private
 bool Load::_SaveHtml()
 {
-	bool b = true;
-	String^ path = this->MapPathSecure("~/wnxd/wnxd_load.tmp");
-	XmlDocument^ dom = gcnew XmlDocument();
-	dom->LoadXml(file::ReadFile(path));
-	XmlElement^ node = (XmlElement^)dom->SelectSingleNode("/wnxd/load[@id='" + this->ClientID + "' and @url='" + this->Page->Request->Url->PathAndQuery + "']");
-	if (node == nullptr)
+	cache^ c = gcnew cache("load", this->_cache * 3600);
+	String^ ret = c->Read(this->Page->Request->Url->PathAndQuery, this->ClientID);
+	if (String::IsNullOrWhiteSpace(ret))
 	{
-		node = dom->CreateElement("load");
-		node->SetAttribute("id", this->ClientID);
-		node->SetAttribute("url", this->Page->Request->Url->PathAndQuery);
-		dom->DocumentElement->AppendChild(node);
-	}
-	else
-	{
-		if (node->Attributes["time"] != nullptr)
-		{
-			Int64 ticks;
-			if (Int64::TryParse(node->Attributes["time"]->Value, ticks) && ticks > DateTime::Now.Ticks) b = false;
-		}
-	}
-	if (b)
-	{
-		if (node->Attributes["time"] == nullptr) node->SetAttribute("time", DateTime::Now.AddDays(1).Ticks.ToString());
-		else node->Attributes["time"]->Value = DateTime::Now.AddHours(this->_cache).Ticks.ToString();
 		StringBuilder^ html = gcnew StringBuilder();
 		StringWriter^ sw = gcnew StringWriter(html);
 		HtmlTextWriter^ htw = gcnew HtmlTextWriter(sw);
 		this->Control::Render(htw);
 		delete htw;
 		delete sw;
-		node->InnerText = HttpUtility::UrlEncode(html->ToString());
-		html = gcnew StringBuilder();
-		sw = gcnew StringWriter(html);
-		dom->Save(sw);
-		delete sw;
-		file::WriteFile(path, html->ToString());
+		ret = html->ToString();
+		c->Write(this->Page->Request->Url->PathAndQuery, this->ClientID, HttpUtility::UrlEncode(ret));
 	}
+	else ret = HttpUtility::UrlDecode(ret);
 	if (this->_refresh)
 	{
 		this->Page->Response->Clear();
-		this->Page->Response->Write(HttpUtility::UrlDecode(node->InnerText));
+		this->Page->Response->Write(ret);
 		this->Page->Response->End();
 		return false;
 	}
@@ -114,31 +90,19 @@ Load::Load()
 {
 	this->_threshold = 200;
 	this->_cache = 24;
-	String^ path = this->MapPathSecure("~/wnxd/");
-	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
-	if (!File::Exists(path + "wnxd_load.tmp")) file::WriteFile(path + "wnxd_load.tmp", "<wnxd></wnxd>");
-	String^ id = HttpContext::Current->Request["wnxd_load"];
-	if (!String::IsNullOrEmpty(id))
-	{
-		XmlDocument^ dom = gcnew XmlDocument();
-		dom->LoadXml(file::ReadFile(path + "wnxd_load.tmp"));
-		XmlNode^ node = dom->SelectSingleNode("/wnxd/load[@id='" + id + "' and @url='" + HttpContext::Current->Request->Url->PathAndQuery + "']");
-		if (node != nullptr)
-		{
-			Int64 ticks;
-			if (Int64::TryParse(node->Attributes["time"]->Value, ticks) && ticks > DateTime::Now.Ticks)
-			{
-				HttpContext::Current->Response->Write(HttpUtility::UrlDecode(node->InnerText));
-				HttpContext::Current->Response->End();
-			}
-		}
-	}
 }
 void Load::OnInit(EventArgs^ e)
 {
 	String^ id = HttpContext::Current->Request["wnxd_load"];
 	if (!String::IsNullOrEmpty(id))
 	{
+		cache^ c = gcnew cache("load", this->_cache * 3600);
+		String^ html = c->Read(HttpContext::Current->Request->Url->PathAndQuery, id);
+		if (!String::IsNullOrWhiteSpace(html))
+		{
+			HttpContext::Current->Response->Write(HttpUtility::UrlDecode(html));
+			HttpContext::Current->Response->End();
+		}
 		this->_jump = true;
 		this->_refresh = id == this->ClientID;
 	}
@@ -177,20 +141,12 @@ void Load::load_enter::Application_BeginRequest()
 	String^ id = this->Request["wnxd_load"];
 	if (!String::IsNullOrEmpty(id))
 	{
-		String^ path = this->Server->MapPath("~/wnxd/");
-		if (!Directory::Exists(path)) Directory::CreateDirectory(path);
-		if (!File::Exists(path + "wnxd_load.tmp")) file::WriteFile(path + "wnxd_load.tmp", "<wnxd></wnxd>");
-		XmlDocument^ dom = gcnew XmlDocument();
-		dom->LoadXml(file::ReadFile(path + "wnxd_load.tmp"));
-		XmlNode^ node = dom->SelectSingleNode("/wnxd/load[@id='" + id + "' and @url='" + this->Request->Url->PathAndQuery + "']");
-		if (node != nullptr)
+		cache^ c = gcnew cache("load", 0);
+		String^ html = c->Read(HttpContext::Current->Request->Url->PathAndQuery, id);
+		if (!String::IsNullOrWhiteSpace(html))
 		{
-			Int64 ticks;
-			if (Int64::TryParse(node->Attributes["time"]->Value, ticks) && ticks > DateTime::Now.Ticks)
-			{
-				this->Response->Write(HttpUtility::UrlDecode(node->InnerText));
-				this->Response->End();
-			}
+			this->Response->Write(HttpUtility::UrlDecode(html));
+			this->Response->End();
 		}
 	}
 }

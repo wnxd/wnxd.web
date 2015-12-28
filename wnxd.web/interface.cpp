@@ -1,6 +1,8 @@
 #include "interface.h"
+#include "config.h"
 
 using namespace wnxd::Web;
+using namespace wnxd::Config;
 using namespace System::Reflection;
 using namespace System::Text;
 using namespace System::Web::Security;
@@ -94,22 +96,12 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 }
 json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ args)
 {
-	String^ path = AppDomain::CurrentDomain->BaseDirectory + "wnxd\\interface\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(this->interface_url, "md5") + "\\" + FormsAuthentication::HashPasswordForStoringInConfigFile(function, "md5") + "\\";
-	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
-	path += FormsAuthentication::HashPasswordForStoringInConfigFile((gcnew json(args))->ToString(), "md5") + ".tmp";
-	json^ r;
-	if (File::Exists(path))
+	cache^ c = gcnew cache("interface", time);
+	json^ r = gcnew json(c->Read(this->interface_url, function));
+	if (json::operator==(r, js::undefined))
 	{
-		TimeSpan t = DateTime::Now - File::GetLastWriteTime(path);
-		if (t.TotalSeconds > time) goto run;
-		r = gcnew json(File::ReadAllText(path));
-		if (json::operator==(r, js::undefined)) goto run;
-	}
-	else
-	{
-	run:
 		r = this->Run(function, args);
-		File::WriteAllText(path, r->ToString());
+		c->Write(this->interface_url, function, r->ToString());
 	}
 	return r;
 }

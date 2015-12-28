@@ -122,8 +122,9 @@ void Enter::_Init(String^ dir)
 		if (mc != nullptr)
 		{
 			if (mc->Groups[1]->Value == InitClassName) return;
-			config^ config = gcnew wnxd::Config::config(dir + "wnxd\\wnxd_config.tmp");
-			config["old_Global"] = mc->Groups[1]->Value;
+			config^ cf = gcnew config(dir + "wnxd\\wnxd_config.tmp");
+			cf["old_Global"] = mc->Groups[1]->Value;
+			delete cf;
 		}
 		File::SetAttributes(path, FileAttributes::Normal);
 	}
@@ -139,8 +140,8 @@ void Enter::Init()
 void Init::_init()
 {
 	array<Assembly^>^ list = GetAllAssembly();
-	config^ config = gcnew wnxd::Config::config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
-	String^ className = config["old_Global"];
+	config^ cf = gcnew config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
+	String^ className = cf["old_Global"];
 	_enter_list = gcnew Dictionary<Type^, Enter^>();
 	for (int i = 0; i < list->Length; i++)
 	{
