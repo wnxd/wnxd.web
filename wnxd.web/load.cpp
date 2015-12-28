@@ -100,6 +100,7 @@ void Load::OnInit(EventArgs^ e)
 		String^ html = c->Read(HttpContext::Current->Request->Url->PathAndQuery, id);
 		if (!String::IsNullOrWhiteSpace(html))
 		{
+			HttpContext::Current->Response->Clear();
 			HttpContext::Current->Response->Write(HttpUtility::UrlDecode(html));
 			HttpContext::Current->Response->End();
 		}
