@@ -92,7 +92,7 @@ String^ cache::Read(String^ key)
 			String^ v = c->GetAttr("cache", "time");
 			if (v == nullptr || !double::TryParse(v, this->_time)) return nullptr;
 		}
-		if (t.TotalSeconds <= this->_time) c->Read("cache");
+		if (t.TotalSeconds <= this->_time) return c->Read("cache");
 	}
 	return nullptr;
 }
@@ -108,7 +108,7 @@ String^ cache::Read(String^ item, String^ key)
 			String^ v = c->GetAttr("cache", "time");
 			if (v == nullptr || !double::TryParse(v, this->_time)) return nullptr;
 		}
-		if (t.TotalSeconds <= this->_time) c->Read("cache");
+		if (t.TotalSeconds <= this->_time) return c->Read("cache");
 	}
 	return nullptr;
 }
