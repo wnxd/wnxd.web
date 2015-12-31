@@ -70,22 +70,24 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		CallInfo->Name = function;
 		CallInfo->Param = gcnew json(args);
 		json^ param = gcnew json(CallInfo);
-		WebRequest^ request = WebRequest::Create(this->interface_url);
+		HttpWebRequest^ request = (HttpWebRequest^)HttpWebRequest::Create(this->interface_url);
 		request->Method = "POST";
+		request->KeepAlive = false;
+		request->Timeout = 10000;
 		request->ContentType = "application/x-www-form-urlencoded";
 		array<Byte>^ data = Encoding::UTF8->GetBytes(interface_enter::EncryptString(param->ToString(), interface_enter::interface_data));
 		request->ContentLength = data->Length;
 		Stream^ dataStream = request->GetRequestStream();
 		dataStream->Write(data, 0, data->Length);
 		dataStream->Flush();
-		dataStream->Close();
+		delete dataStream;
 		WebResponse^ response = request->GetResponse();
 		dataStream = response->GetResponseStream();
 		StreamReader^ reader = gcnew StreamReader(dataStream);
 		String^ responseData = reader->ReadToEnd();
-		reader->Close();
-		dataStream->Close();
-		response->Close();
+		delete reader;
+		delete dataStream;
+		delete response;
 		if (!String::IsNullOrEmpty(responseData)) return gcnew json(interface_enter::DecryptString(responseData, interface_enter::interface_data));
 	}
 	catch (...)
@@ -214,6 +216,7 @@ void interface_enter::Initialize()
 		}
 	}
 	this->ilist = l;
+	ServicePointManager::DefaultConnectionLimit = 200;
 }
 void interface_enter::Application_BeginRequest()
 {

@@ -227,8 +227,11 @@ void Init::_HttpModule_Init()
 	{
 		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
-			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
-			if (HttpModule != nullptr) HttpModule->Init(this);
+			if (IHttpModule::typeid->IsAssignableFrom(kv->Key))
+			{
+				IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
+				if (HttpModule != nullptr) HttpModule->Init(this);
+			}
 		}
 	}
 }
@@ -238,8 +241,11 @@ void Init::_HttpModule_Dispose()
 	{
 		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
-			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
-			if (HttpModule != nullptr) delete HttpModule;
+			if (IHttpModule::typeid->IsAssignableFrom(kv->Key))
+			{
+				IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
+				if (HttpModule != nullptr) delete HttpModule;
+			}
 		}
 	}
 }
@@ -249,18 +255,21 @@ void Init::_HttpHandler()
 	{
 		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
-			IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(kv->Value);
-			if (HttpHandler != nullptr && HttpHandler->IsReusable)
+			if (IHttpHandler::typeid->IsAssignableFrom(kv->Key))
 			{
-				String^ HttpHandlerPath = kv->Value->_HttpHandlerPath;
-				if (!String::IsNullOrEmpty(HttpHandlerPath))
+				IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(kv->Value);
+				if (HttpHandler != nullptr && HttpHandler->IsReusable)
 				{
-					HttpHandlerPath = HttpHandlerPath->Replace(".", "\\.")->Replace("*", ".*")->Replace("?", ".?") + "$";
-					Regex^ regex = gcnew Regex(HttpHandlerPath, RegexOptions::IgnoreCase);
-					if (regex->IsMatch(this->Request->Url->AbsolutePath))
+					String^ HttpHandlerPath = kv->Value->_HttpHandlerPath;
+					if (!String::IsNullOrEmpty(HttpHandlerPath))
 					{
-						HttpHandler->ProcessRequest(this->Context);
-						this->Response->End();
+						HttpHandlerPath = HttpHandlerPath->Replace(".", "\\.")->Replace("*", ".*")->Replace("?", ".?") + "$";
+						Regex^ regex = gcnew Regex(HttpHandlerPath, RegexOptions::IgnoreCase);
+						if (regex->IsMatch(this->Request->Url->AbsolutePath))
+						{
+							HttpHandler->ProcessRequest(this->Context);
+							this->Response->End();
+						}
 					}
 				}
 			}
