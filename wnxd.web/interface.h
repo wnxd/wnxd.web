@@ -117,6 +117,7 @@ namespace wnxd
 		private:
 			IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ ilist;
 			String^ GetGenericName(Type^ gt);
+			void doThread(Object^ obj);
 			void doWork(Object^ obj);
 			enum class _ParameterType
 			{
@@ -143,6 +144,7 @@ namespace wnxd
 			};
 			ref struct _ClassInfo
 			{
+				property String^ Domain;
 				property String^ Namespace;
 				property String^ ClassName;
 				property IList<_MethodInfo^>^ Methods;
@@ -153,6 +155,7 @@ namespace wnxd
 				property json^ Data;
 			};
 		internal:
+			static bool _init;
 			static String^ interface_name;
 			static String^ interface_data;
 			static IDictionary<String^, Socket^>^ sockets;
