@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include "config.h"
 
 using namespace wnxd::Config;
@@ -149,6 +150,7 @@ String^ file::ReadFile(String^ path)
 	}
 	catch (...)
 	{
+		Sleep(200);
 		res = ReadFile(path);
 	}
 	return res;
@@ -166,6 +168,7 @@ void file::WriteFile(String^ path, String^ contents)
 	}
 	catch (...)
 	{
+		Sleep(200);
 		WriteFile(path, contents);
 	}
 }

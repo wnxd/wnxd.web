@@ -236,11 +236,10 @@ void Init::_HttpModule_Dispose()
 {
 	if (_enter_list != nullptr)
 	{
-		MethodInfo^ Dispose = (IHttpModule::typeid)->GetMethod("Dispose");
 		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
 		{
 			IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
-			if (HttpModule != nullptr) Dispose->Invoke(kv->Value, nullptr);
+			if (HttpModule != nullptr) delete HttpModule;
 		}
 	}
 }
