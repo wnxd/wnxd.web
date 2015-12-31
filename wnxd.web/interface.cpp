@@ -73,8 +73,7 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		HttpWebRequest^ request = (HttpWebRequest^)HttpWebRequest::Create(this->interface_url);
 		request->Method = "POST";
 		request->KeepAlive = false;
-		request->Timeout = 10000;
-		request->ContentType = "application/x-www-form-urlencoded";
+		request->ContentType = "interface/json";
 		array<Byte>^ data = Encoding::UTF8->GetBytes(interface_enter::EncryptString(param->ToString(), interface_enter::interface_data));
 		request->ContentLength = data->Length;
 		Stream^ dataStream = request->GetRequestStream();
