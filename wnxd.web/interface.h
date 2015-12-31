@@ -146,8 +146,6 @@ namespace wnxd
 		internal:
 			static String^ interface_name;
 			static String^ interface_data;
-			static String^ EncryptString(String^ sInputString, String^ sKey);
-			static String^ DecryptString(String^ sInputString, String^ sKey);
 		protected:
 			virtual void Initialize() override;
 			virtual void Application_BeginRequest() override;

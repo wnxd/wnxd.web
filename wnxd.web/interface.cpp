@@ -1,13 +1,11 @@
 #include "interface.h"
 #include "config.h"
+#include "common.h"
 
 using namespace wnxd::Web;
 using namespace wnxd::Config;
 using namespace System::Reflection;
 using namespace System::Text;
-using namespace System::Web::Security;
-using namespace System::Security::Cryptography;
-using namespace System::Globalization;
 using namespace System::Web::Configuration;
 using namespace System::Net;
 using namespace System::IO;
@@ -73,8 +71,12 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		HttpWebRequest^ request = (HttpWebRequest^)HttpWebRequest::Create(this->interface_url);
 		request->Method = "POST";
 		request->KeepAlive = false;
-		request->ContentType = "interface/json";
-		array<Byte>^ data = Encoding::UTF8->GetBytes(interface_enter::EncryptString(param->ToString(), interface_enter::interface_data));
+		//request->ServicePoint->Expect100Continue = false;
+		//request->ServicePoint->UseNagleAlgorithm = false;
+		//request->ServicePoint->ConnectionLimit = 65500;
+		//request->AllowWriteStreamBuffering = false;
+		request->ContentType = "application/x-www-form-urlencoded";
+		array<Byte>^ data = Encoding::UTF8->GetBytes(DESEncrypt(param->ToString(), interface_enter::interface_data));
 		request->ContentLength = data->Length;
 		Stream^ dataStream = request->GetRequestStream();
 		dataStream->Write(data, 0, data->Length);
@@ -87,7 +89,7 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		delete reader;
 		delete dataStream;
 		delete response;
-		if (!String::IsNullOrEmpty(responseData)) return gcnew json(interface_enter::DecryptString(responseData, interface_enter::interface_data));
+		if (!String::IsNullOrEmpty(responseData)) return gcnew json(DESDecrypt(responseData, interface_enter::interface_data));
 	}
 	catch (...)
 	{
@@ -127,7 +129,7 @@ void InterfaceBase::init()
 	if (String::IsNullOrEmpty(this->_classname)) this->_classname = this->GetType()->Name;
 	String^ name = this->_classname;
 	if (!String::IsNullOrEmpty(this->_namespace)) name = this->_namespace + "." + name;
-	this->interface_url = this->_domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(interface_enter::EncryptString(name, interface_enter::interface_name));
+	this->interface_url = this->_domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(DESEncrypt(name, interface_enter::interface_name));
 }
 //public
 InterfaceBase::InterfaceBase()
@@ -162,29 +164,6 @@ String^ interface_enter::GetGenericName(Type^ gt)
 	}
 	return name;
 }
-//internal
-String^ interface_enter::EncryptString(String^ sInputString, String^ sKey)
-{
-	array<Byte>^ data = Encoding::UTF8->GetBytes(sInputString);
-	DESCryptoServiceProvider^ DES = gcnew DESCryptoServiceProvider();
-	DES->Key = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
-	DES->IV = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
-	ICryptoTransform^ desencrypt = DES->CreateEncryptor();
-	array<Byte>^ result = desencrypt->TransformFinalBlock(data, 0, data->Length);
-	return BitConverter::ToString(result);
-}
-String^ interface_enter::DecryptString(String^ sInputString, String^ sKey)
-{
-	array<String^>^ sInput = sInputString->Split('-');
-	array<Byte>^ data = gcnew array<Byte>(sInput->Length);
-	for (int i = 0; i < sInput->Length; i++) data[i] = Byte::Parse(sInput[i], NumberStyles::HexNumber);
-	DESCryptoServiceProvider^ DES = gcnew DESCryptoServiceProvider();
-	DES->Key = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
-	DES->IV = ASCIIEncoding::ASCII->GetBytes(FormsAuthentication::HashPasswordForStoringInConfigFile(sKey, "md5")->Substring(0, 8));
-	ICryptoTransform^ desencrypt = DES->CreateDecryptor();
-	array<Byte>^ result = desencrypt->TransformFinalBlock(data, 0, data->Length);
-	return Encoding::UTF8->GetString(result);
-}
 //protected
 void interface_enter::Initialize()
 {
@@ -204,7 +183,7 @@ void interface_enter::Initialize()
 				if (Interface::typeid->IsAssignableFrom(type) && type != Interface::typeid)
 				{
 					IDictionary<String^, MethodInfo^>^ dic = gcnew Dictionary<String^, MethodInfo^>();
-					for each (MethodInfo^ method in type->GetMethods(BindingFlags::Instance | BindingFlags::Public | BindingFlags::DeclaredOnly)) dic->Add(FormsAuthentication::HashPasswordForStoringInConfigFile(method->ToString(), "md5"), method);
+					for each (MethodInfo^ method in type->GetMethods(BindingFlags::Instance | BindingFlags::Public | BindingFlags::DeclaredOnly)) dic->Add(MD5Encrypt(method->ToString()), method);
 					l->Add(type, dic);
 				}
 			}
@@ -215,7 +194,6 @@ void interface_enter::Initialize()
 		}
 	}
 	this->ilist = l;
-	ServicePointManager::DefaultConnectionLimit = 200;
 }
 void interface_enter::Application_BeginRequest()
 {
@@ -227,8 +205,8 @@ void interface_enter::Application_BeginRequest()
 		{
 			try
 			{
-				name = DecryptString(HttpUtility::UrlDecode(name), interface_enter::interface_name);
-				param = DecryptString(param, interface_enter::interface_data);
+				name = DESDecrypt(HttpUtility::UrlDecode(name), interface_enter::interface_name);
+				param = DESDecrypt(param, interface_enter::interface_data);
 				json^ info = gcnew json(param);
 				_CallInfo^ CallInfo = (_CallInfo^)info->TryConvert(_CallInfo::typeid);
 				String^ fn = CallInfo->Name;
@@ -290,7 +268,7 @@ void interface_enter::Application_BeginRequest()
 							}
 						}
 					}
-					this->Response->Write(EncryptString(r->ToString(), interface_enter::interface_data));
+					this->Response->Write(DESEncrypt(r->ToString(), interface_enter::interface_data));
 					this->Response->End();
 				}
 				else
@@ -328,7 +306,7 @@ void interface_enter::Application_BeginRequest()
 										out->Data = r;
 										r = gcnew json(out);
 									}
-									this->Response->Write(EncryptString(r->ToString(), interface_enter::interface_data));
+									this->Response->Write(DESEncrypt(r->ToString(), interface_enter::interface_data));
 									break;
 								}
 							}

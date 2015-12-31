@@ -91,6 +91,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="cookie.h" />
     <ClInclude Include="enum.h" />
@@ -103,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="common.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="cookie.cpp" />
     <ClCompile Include="csharp_dllmain.cpp" />

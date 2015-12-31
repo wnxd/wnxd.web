@@ -1,9 +1,9 @@
 #include "config.h"
+#include "common.h"
 
 using namespace wnxd::Config;
 using namespace System::IO;
 using namespace System::Text;
-using namespace System::Web::Security;
 //class config
 //public
 config::config(String^ path)
@@ -95,8 +95,8 @@ String^ cache::Read(String^ item, String^ item2, String^ key)
 String^ cache::Read(array<String^>^ items, String^ key)
 {
 	String^ path = this->_path;
-	if (items != nullptr && items->Length > 0) for each (String^ item in items) path += FormsAuthentication::HashPasswordForStoringInConfigFile(item, "md5") + "\\";
-	path += FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
+	if (items != nullptr && items->Length > 0) for each (String^ item in items) path += MD5Encrypt(item) + "\\";
+	path += MD5Encrypt(key);
 	if (File::Exists(path))
 	{
 		config^ c = gcnew config(path);
@@ -125,9 +125,10 @@ void cache::Write(String^ item, String^ item2, String^ key, String^ val)
 void cache::Write(array<String^>^ items, String^ key, String^ val)
 {
 	String^ path = this->_path;
-	if (items != nullptr && items->Length > 0) for each (String^ item in items) path += FormsAuthentication::HashPasswordForStoringInConfigFile(item, "md5") + "\\";
+
+	if (items != nullptr && items->Length > 0) for each (String^ item in items) path += MD5Encrypt(item) + "\\";
 	if (!Directory::Exists(path)) Directory::CreateDirectory(path);
-	path += FormsAuthentication::HashPasswordForStoringInConfigFile(key, "md5");
+	path += MD5Encrypt(key);
 	config^ c = gcnew config(path);
 	c->Write("cache", val);
 	c->SetAttr("cache", "time", this->_time.ToString());
