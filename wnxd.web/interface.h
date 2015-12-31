@@ -3,9 +3,11 @@
 using namespace wnxd::javascript;
 using namespace System;
 using namespace System::Collections::Generic;
+using namespace System::Net::Sockets;
 
 #define Interface_Name_Key "wnxd: interface_name"
 #define Interface_Data_Key "wnxd: interface_data"
+#define Interface_Port 5361
 
 namespace wnxd
 {
@@ -59,6 +61,11 @@ namespace wnxd
 			property String^ Name;
 			property json^ Param;
 		};
+		private ref struct _InterfaceInfo
+		{
+			property String^ Name;
+			property _CallInfo^ Info;
+		};
 		/// <summary>
 		/// web接口调用基类,执行基类的run方法即可调用指定域名下的接口
 		/// 可以在web.config的&lt;appSettings&gt;中配置接口域名,例如&lt;add key=&quot;wnxd_interface_domain&quot; value=&quot;接口域名&quot; /&gt;
@@ -66,7 +73,8 @@ namespace wnxd
 		public ref class InterfaceBase
 		{
 		private:
-			String^ interface_url, ^_domain, ^_namespace, ^_classname;
+			String^ _domain, ^_namespace, ^_classname, ^_fullname;
+			Socket^ _socket;
 			void init();
 		protected:
 			/// <summary>
@@ -109,6 +117,7 @@ namespace wnxd
 		private:
 			IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ ilist;
 			String^ GetGenericName(Type^ gt);
+			void doWork(Object^ obj);
 			enum class _ParameterType
 			{
 				In,
@@ -146,6 +155,8 @@ namespace wnxd
 		internal:
 			static String^ interface_name;
 			static String^ interface_data;
+			static IDictionary<String^, Socket^>^ sockets;
+			static Socket^ server;
 		protected:
 			virtual void Initialize() override;
 			virtual void Application_BeginRequest() override;
