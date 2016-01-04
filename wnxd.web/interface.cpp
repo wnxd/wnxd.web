@@ -194,11 +194,23 @@ String^ interface_enter::GetGenericName(Type^ gt)
 	}
 	return name;
 }
-void interface_enter::doThread(Object^ obj)
+void interface_enter::doThread()
 {
-	WebRequest^ request = dynamic_cast<WebRequest^>(obj);
-	request->BeginGetResponse(nullptr, nullptr);
-	request->Abort();
+	if (interface_enter::server == nullptr)
+	{
+		String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
+		int port;
+		if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
+		IPEndPoint^ ipep = gcnew IPEndPoint(IPAddress::Any, port);
+		interface_enter::server = gcnew Socket(ipep->AddressFamily, SocketType::Stream, ProtocolType::Tcp);
+		interface_enter::server->Bind(ipep);
+		interface_enter::server->Listen(10);
+		while (true)
+		{
+			Socket^ client = interface_enter::server->Accept();
+			(gcnew Thread(gcnew ParameterizedThreadStart(this, &interface_enter::doWork)))->Start(client);
+		}
+	}
 }
 void interface_enter::doWork(Object^ obj)
 {
@@ -307,131 +319,94 @@ void interface_enter::Initialize()
 	this->ilist = l;
 	if (l->Count > 0) interface_enter::_init = true;
 }
+void interface_enter::Application_Start()
+{
+	if (interface_enter::_init) (gcnew Thread(gcnew ThreadStart(this, &interface_enter::doThread)))->Start();
+}
 void interface_enter::Application_BeginRequest()
 {
-	if (interface_enter::_init)
+	String^ name = this->Request->QueryString["wnxd_interface"];
+	if (!String::IsNullOrEmpty(name))
 	{
-		interface_enter::_init = false;
-		WebRequest^ request = WebRequest::Create(this->Request->Url->Scheme + "://" + this->Request->Url->Authority + "/wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(DESEncrypt("$socket$", interface_enter::interface_name)));
-		request->Method = "POST";
-		request->ContentType = "application/x-www-form-urlencoded";
-		_CallInfo^ CallInfo = gcnew _CallInfo();
-		CallInfo->Name = "open";
-		json^ param = gcnew json(CallInfo);
-		array<Byte>^ data = Encoding::UTF8->GetBytes(DESEncrypt(param->ToString(), interface_enter::interface_data));
-		request->ContentLength = data->Length;
-		Stream^ dataStream = request->GetRequestStream();
-		dataStream->Write(data, 0, data->Length);
-		dataStream->Flush();
-		delete dataStream;
-		(gcnew Thread(gcnew ParameterizedThreadStart(this, &interface_enter::doThread)))->Start(request);
-	}
-	else
-	{
-		String^ name = this->Request->QueryString["wnxd_interface"];
-		if (!String::IsNullOrEmpty(name))
+		String^ param = this->Request->Form->ToString();
+		if (!String::IsNullOrEmpty(param))
 		{
-			String^ param = this->Request->Form->ToString();
-			if (!String::IsNullOrEmpty(param))
+			try
 			{
-				try
+				name = DESDecrypt(HttpUtility::UrlDecode(name), interface_enter::interface_name);
+				param = DESDecrypt(param, interface_enter::interface_data);
+				json^ info = gcnew json(param);
+				_CallInfo^ CallInfo = (_CallInfo^)info->TryConvert(_CallInfo::typeid);
+				String^ fn = CallInfo->Name;
+				if (name == "$query$")
 				{
-					name = DESDecrypt(HttpUtility::UrlDecode(name), interface_enter::interface_name);
-					param = DESDecrypt(param, interface_enter::interface_data);
-					json^ info = gcnew json(param);
-					_CallInfo^ CallInfo = (_CallInfo^)info->TryConvert(_CallInfo::typeid);
-					String^ fn = CallInfo->Name;
-					if (name == "$socket$")
+					json^ r = gcnew json();
+					if (fn == "interface_name") for each (Type^ type in this->ilist->Keys) r->push(type->FullName);
+					else if (fn == "interface_info")
 					{
-						if (fn == "open")
+						Array^ EmptyArray = gcnew array<json^>(0);
+						json^ list = (json^)info["List"];
+						for (int i = 0; i < list->length.Value; i++)
 						{
-							if (interface_enter::server == nullptr)
+							name = (String^)((json^)list[i])->TryConvert(String::typeid);
+							for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
 							{
-								String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
-								int port;
-								if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
-								IPEndPoint^ ipep = gcnew IPEndPoint(IPAddress::Any, port);
-								interface_enter::server = gcnew Socket(ipep->AddressFamily, SocketType::Stream, ProtocolType::Tcp);
-								interface_enter::server->Bind(ipep);
-								interface_enter::server->Listen(10);
-								while (true)
+								if (item->Key->FullName == name)
 								{
-									Socket^ client = interface_enter::server->Accept();
-									(gcnew Thread(gcnew ParameterizedThreadStart(this, &interface_enter::doWork)))->Start(client);
-								}
-							}
-						}
-					}
-					else if (name == "$query$")
-					{
-						json^ r = gcnew json();
-						if (fn == "interface_name") for each (Type^ type in this->ilist->Keys) r->push(type->FullName);
-						else if (fn == "interface_info")
-						{
-							Array^ EmptyArray = gcnew array<json^>(0);
-							json^ list = (json^)info["List"];
-							for (int i = 0; i < list->length.Value; i++)
-							{
-								name = (String^)((json^)list[i])->TryConvert(String::typeid);
-								for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
-								{
-									if (item->Key->FullName == name)
+									_ClassInfo^ d = gcnew _ClassInfo();
+									String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
+									int port;
+									if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
+									d->Domain = this->Request->Url->Host + ":" + port.ToString();
+									d->Namespace = item->Key->Namespace;
+									d->ClassName = item->Key->Name;
+									IList<_MethodInfo^>^ Methods = gcnew List<_MethodInfo^>();
+									for each (KeyValuePair<String^, MethodInfo^>^ item2 in item->Value)
 									{
-										_ClassInfo^ d = gcnew _ClassInfo();
-										String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
-										int port;
-										if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
-										d->Domain = this->Request->Url->Host + ":" + port.ToString();
-										d->Namespace = item->Key->Namespace;
-										d->ClassName = item->Key->Name;
-										IList<_MethodInfo^>^ Methods = gcnew List<_MethodInfo^>();
-										for each (KeyValuePair<String^, MethodInfo^>^ item2 in item->Value)
+										MethodInfo^ mi = item2->Value;
+										_MethodInfo^ t = gcnew _MethodInfo();
+										t->MethodToken = item2->Key;
+										t->MethodName = mi->Name;
+										Type^ T = mi->ReturnType;
+										t->ReturnType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
+										IList<_ParameterInfo^>^ Parameters = gcnew List<_ParameterInfo^>();
+										array<ParameterInfo^>^ pis = mi->GetParameters();
+										for (int y = 0; y < pis->Length; y++)
 										{
-											MethodInfo^ mi = item2->Value;
-											_MethodInfo^ t = gcnew _MethodInfo();
-											t->MethodToken = item2->Key;
-											t->MethodName = mi->Name;
-											Type^ T = mi->ReturnType;
-											t->ReturnType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
-											IList<_ParameterInfo^>^ Parameters = gcnew List<_ParameterInfo^>();
-											array<ParameterInfo^>^ pis = mi->GetParameters();
-											for (int y = 0; y < pis->Length; y++)
-											{
-												ParameterInfo^ pi = pis[y];
-												_ParameterInfo^ tt = gcnew _ParameterInfo();
-												tt->ParameterName = pi->Name;
-												T = pi->ParameterType;
-												if (pi->IsOut) tt->Type = _ParameterType::Out;
-												else if (pi->IsRetval || T->IsByRef) tt->Type = _ParameterType::Retval;
-												else tt->Type = _ParameterType::In;
-												tt->IsOptional = pi->IsOptional;
-												if (pi->IsOptional) tt->DefaultValue = pi->DefaultValue;
-												if (T->IsByRef) T = T->GetElementType();
-												tt->ParameterType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
-												Parameters->Add(tt);
-											}
-											t->Parameters = Parameters;
-											array<Interface::MethodAttribute^>^ Summary = (array<Interface::MethodAttribute^>^)mi->GetCustomAttributes(Interface::MethodAttribute::typeid, true);
-											if (Summary->Length > 0) t->Summary = Summary[0]->summary;
-											array<Interface::MethodCacheAttribute^>^ Time = (array<Interface::MethodCacheAttribute^>^)mi->GetCustomAttributes(Interface::MethodCacheAttribute::typeid, true);
-											if (Time->Length > 0) t->CacheTime = Time[0]->time;
-											Methods->Add(t);
+											ParameterInfo^ pi = pis[y];
+											_ParameterInfo^ tt = gcnew _ParameterInfo();
+											tt->ParameterName = pi->Name;
+											T = pi->ParameterType;
+											if (pi->IsOut) tt->Type = _ParameterType::Out;
+											else if (pi->IsRetval || T->IsByRef) tt->Type = _ParameterType::Retval;
+											else tt->Type = _ParameterType::In;
+											tt->IsOptional = pi->IsOptional;
+											if (pi->IsOptional) tt->DefaultValue = pi->DefaultValue;
+											if (T->IsByRef) T = T->GetElementType();
+											tt->ParameterType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
+											Parameters->Add(tt);
 										}
-										d->Methods = Methods;
-										r->push(d);
-										break;
+										t->Parameters = Parameters;
+										array<Interface::MethodAttribute^>^ Summary = (array<Interface::MethodAttribute^>^)mi->GetCustomAttributes(Interface::MethodAttribute::typeid, true);
+										if (Summary->Length > 0) t->Summary = Summary[0]->summary;
+										array<Interface::MethodCacheAttribute^>^ Time = (array<Interface::MethodCacheAttribute^>^)mi->GetCustomAttributes(Interface::MethodCacheAttribute::typeid, true);
+										if (Time->Length > 0) t->CacheTime = Time[0]->time;
+										Methods->Add(t);
 									}
+									d->Methods = Methods;
+									r->push(d);
+									break;
 								}
 							}
 						}
-						this->Response->Write(DESEncrypt(r->ToString(), interface_enter::interface_data));
 					}
-					this->Response->End();
+					this->Response->Write(DESEncrypt(r->ToString(), interface_enter::interface_data));
 				}
-				catch (...)
-				{
-					this->Response->End();
-				}
+				this->Response->End();
+			}
+			catch (...)
+			{
+				this->Response->End();
 			}
 		}
 	}

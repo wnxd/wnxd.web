@@ -117,7 +117,7 @@ namespace wnxd
 		private:
 			IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ ilist;
 			String^ GetGenericName(Type^ gt);
-			void doThread(Object^ obj);
+			void doThread();
 			void doWork(Object^ obj);
 			enum class _ParameterType
 			{
@@ -162,6 +162,7 @@ namespace wnxd
 			static Socket^ server;
 		protected:
 			virtual void Initialize() override;
+			virtual void Application_Start() override;
 			virtual void Application_BeginRequest() override;
 		};
 	}
