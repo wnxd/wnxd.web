@@ -148,9 +148,16 @@ void InterfaceBase::init()
 			}
 			delete this->_socket;
 		}
-		this->_socket = gcnew Socket(AddressFamily::InterNetwork, SocketType::Stream, ProtocolType::Tcp);
-		this->_socket->Connect(ip, port);
-		interface_enter::sockets->Add(key, this->_socket);
+		try
+		{
+			this->_socket = gcnew Socket(AddressFamily::InterNetwork, SocketType::Stream, ProtocolType::Tcp);
+			this->_socket->Connect(ip, port);
+			interface_enter::sockets->Add(key, this->_socket);
+		}
+		catch (...)
+		{
+			this->_socket = nullptr;
+		}
 	}
 }
 //public
@@ -342,7 +349,7 @@ void interface_enter::Application_BeginRequest()
 							{
 								String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
 								int port;
-								if (String::IsNullOrEmpty(t_port) || int::TryParse(t_port, port)) port = Interface_Port;
+								if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
 								IPEndPoint^ ipep = gcnew IPEndPoint(IPAddress::Any, port);
 								interface_enter::server = gcnew Socket(ipep->AddressFamily, SocketType::Stream, ProtocolType::Tcp);
 								interface_enter::server->Bind(ipep);
@@ -373,7 +380,7 @@ void interface_enter::Application_BeginRequest()
 										_ClassInfo^ d = gcnew _ClassInfo();
 										String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
 										int port;
-										if (String::IsNullOrEmpty(t_port) || int::TryParse(t_port, port)) port = Interface_Port;
+										if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
 										d->Domain = this->Request->Url->Host + ":" + port.ToString();
 										d->Namespace = item->Key->Namespace;
 										d->ClassName = item->Key->Name;
