@@ -83,7 +83,7 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		array<Byte>^ inBuffer = gcnew array<Byte>(len);
 		this->_socket->Receive(inBuffer, len, SocketFlags::None);
 		String^ inBufferStr = DESDecrypt(Encoding::Default->GetString(inBuffer), interface_enter::interface_data);
-		return gcnew json(DESDecrypt(inBufferStr, interface_enter::interface_data));
+		return gcnew json(inBufferStr);
 	}
 	catch (...)
 	{
@@ -124,11 +124,13 @@ void InterfaceBase::init()
 	if (String::IsNullOrEmpty(this->_classname)) this->_classname = this->GetType()->Name;
 	this->_fullname = this->_classname;
 	if (!String::IsNullOrEmpty(this->_namespace)) this->_fullname = this->_namespace + "." + this->_fullname;
-	array<String^>^ arr = this->_domain->Split(':');
+	Regex^ re = gcnew Regex("://(.+?)(?::(\\d+))?/");
+	Match^ mc = re->Match(this->_domain);
+	String^ d = mc->Groups[1]->Value;
 	IPAddress^ ip;
-	if (!IPAddress::TryParse(arr[0], ip)) ip = (IPAddress^)Dns::GetHostEntry(arr[0])->AddressList[0];
+	if (!IPAddress::TryParse(d, ip)) ip = Host2IP(d);
 	int port;
-	if (arr->Length == 2) port = int::Parse(arr[1]);
+	if (mc->Groups[2]->Success) port = int::Parse(mc->Groups[2]->Value);
 	else port = Interface_Port;
 	String^ key = ip->ToString() + ":" + port.ToString();
 	if (interface_enter::sockets->ContainsKey(key)) this->_socket = interface_enter::sockets[key];
@@ -160,6 +162,7 @@ InterfaceBase::InterfaceBase()
 		interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
 		if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
 		if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
+		interface_enter::sockets = gcnew Dictionary<String^, Socket^>();
 	}
 	init();
 }
@@ -206,7 +209,7 @@ void interface_enter::doWork(Object^ obj)
 				client->Receive(inBuffer, len, SocketFlags::None);
 				String^ inBufferStr = DESDecrypt(Encoding::Default->GetString(inBuffer), interface_enter::interface_data);
 				json^ info = gcnew json(inBufferStr);
-				_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_CallInfo::typeid);
+				_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
 				String^ name = InterfaceInfo->Name;
 				String^ fn = InterfaceInfo->Info->Name;
 				String^ outBufferStr = "";
@@ -264,11 +267,14 @@ void interface_enter::doWork(Object^ obj)
 //protected
 void interface_enter::Initialize()
 {
-	interface_enter::interface_name = WebConfigurationManager::AppSettings["Interface_Name_Key"];
-	interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
-	interface_enter::sockets = gcnew Dictionary<String^, Socket^>();
-	if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
-	if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
+	if (String::IsNullOrEmpty(interface_enter::interface_name))
+	{
+		interface_enter::interface_name = WebConfigurationManager::AppSettings["Interface_Name_Key"];
+		interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
+		if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
+		if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
+		interface_enter::sockets = gcnew Dictionary<String^, Socket^>();
+	}
 	IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ l = gcnew Dictionary<Type^, IDictionary<String^, MethodInfo^>^>();
 	array<Assembly^>^ list = Init::GetAllAssembly();
 	for each (Assembly^ assembly in list)
