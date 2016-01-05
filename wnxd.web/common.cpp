@@ -8,7 +8,7 @@ using namespace System::Net::Sockets;
 String^ MD5Encrypt(String^ strText)
 {
 	MD5^ md5 = gcnew MD5CryptoServiceProvider();
-	array<Byte>^ result = md5->ComputeHash(Encoding::Default->GetBytes(strText));
+	array<Byte>^ result = md5->ComputeHash(Encoding::UTF8->GetBytes(strText));
 	return BitConverter::ToString(result)->Replace("-", "");
 }
 String^ DESEncrypt(String^ sInputString, String^ sKey)

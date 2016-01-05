@@ -100,6 +100,7 @@
     <ClInclude Include="interface.h" />
     <ClInclude Include="load.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="socket.h" />
     <ClInclude Include="web.h" />
   </ItemGroup>
   <ItemGroup>
@@ -117,6 +118,7 @@
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="load.cpp" />
     <ClCompile Include="Resource.cpp" />
+    <ClCompile Include="socket.cpp" />
     <ClCompile Include="web.cpp" />
   </ItemGroup>
   <ItemGroup>

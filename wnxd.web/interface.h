@@ -1,6 +1,8 @@
 #include "init.h"
+#include "socket.h"
 
 using namespace wnxd::javascript;
+using namespace wnxd::Socket;
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Net::Sockets;
@@ -74,7 +76,7 @@ namespace wnxd
 		{
 		private:
 			String^ _domain, ^_namespace, ^_classname, ^_fullname;
-			Socket^ _socket;
+			ClientSocket^ _socket;
 			void init();
 		protected:
 			/// <summary>
@@ -158,8 +160,8 @@ namespace wnxd
 			static bool _init;
 			static String^ interface_name;
 			static String^ interface_data;
-			static IDictionary<String^, Socket^>^ sockets;
-			static Socket^ server;
+			static IDictionary<String^, ClientSocket^>^ sockets;
+			static System::Net::Sockets::Socket^ server;
 		protected:
 			virtual void Initialize() override;
 			virtual void Application_Start() override;
