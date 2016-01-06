@@ -1,10 +1,9 @@
 #include "init.h"
-#include "socket.h"
 
 using namespace wnxd::javascript;
-using namespace wnxd::Socket;
 using namespace System;
 using namespace System::Collections::Generic;
+using namespace System::Net;
 using namespace System::Net::Sockets;
 
 #define Interface_Name_Key "wnxd: interface_name"
@@ -76,7 +75,7 @@ namespace wnxd
 		{
 		private:
 			String^ _domain, ^_namespace, ^_classname, ^_fullname;
-			ClientSocket^ _socket;
+			IPEndPoint^ _ip;
 			void init();
 		protected:
 			/// <summary>
@@ -119,8 +118,7 @@ namespace wnxd
 		private:
 			IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ ilist;
 			String^ GetGenericName(Type^ gt);
-			void doThread();
-			void doWork(Object^ obj);
+			void doWork();
 			enum class _ParameterType
 			{
 				In,
@@ -157,11 +155,10 @@ namespace wnxd
 				property json^ Data;
 			};
 		internal:
-			static bool _init;
 			static String^ interface_name;
 			static String^ interface_data;
-			static IDictionary<String^, ClientSocket^>^ sockets;
-			static System::Net::Sockets::Socket^ server;
+			static UdpClient^ server;
+			static Dictionary<Guid, String^>^ result;
 		protected:
 			virtual void Initialize() override;
 			virtual void Application_Start() override;

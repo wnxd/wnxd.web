@@ -7,7 +7,6 @@ using namespace wnxd::Config;
 using namespace System::Reflection;
 using namespace System::Text;
 using namespace System::Web::Configuration;
-using namespace System::Net;
 using namespace System::IO;
 using namespace System::Text::RegularExpressions;
 using namespace System::Diagnostics;
@@ -72,7 +71,26 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		CallInfo->Param = gcnew json(args);
 		InterfaceInfo->Info = CallInfo;
 		json^ param = gcnew json(InterfaceInfo);
-		return gcnew json(this->_socket->Send(param->ToString()));
+		MemoryStream^ stream = gcnew MemoryStream();
+		Guid guid = Guid::NewGuid();
+		stream->Write(guid.ToByteArray(), 0, 16);
+		stream->WriteByte(0);
+		array<Byte>^ data = Encoding::UTF8->GetBytes(param->ToString());
+		stream->Write(data, 0, data->Length);
+		data = stream->ToArray();
+		delete stream;
+		interface_enter::server->Send(data, data->Length, this->_ip);
+		DateTime d = DateTime::Now.AddSeconds(10);
+		do
+		{
+			if (interface_enter::result->ContainsKey(guid))
+			{
+				String^ r = interface_enter::result[guid];
+				interface_enter::result->Remove(guid);
+				return gcnew json(r);
+			}
+			Thread::Sleep(50);
+		} while (DateTime::Now < d);
 	}
 	catch (...)
 	{
@@ -121,44 +139,11 @@ void InterfaceBase::init()
 	int port;
 	if (mc->Groups[2]->Success) port = int::Parse(mc->Groups[2]->Value);
 	else port = Interface_Port;
-	String^ key = ip->ToString() + ":" + port.ToString();
-	if (interface_enter::sockets->ContainsKey(key)) this->_socket = interface_enter::sockets[key];
-	else
-	{
-		if (this->_socket != nullptr)
-		{
-			for each (KeyValuePair<String^, ClientSocket^>^ item in interface_enter::sockets)
-			{
-				if (item->Value == this->_socket)
-				{
-					interface_enter::sockets->Remove(item->Key);
-					break;
-				}
-			}
-			delete this->_socket;
-		}
-		try
-		{
-			this->_socket = gcnew ClientSocket(ip, port);
-			interface_enter::sockets->Add(key, this->_socket);
-		}
-		catch (...)
-		{
-			this->_socket = nullptr;
-		}
-	}
+	this->_ip = gcnew IPEndPoint(ip, port);
 }
 //public
 InterfaceBase::InterfaceBase()
 {
-	if (String::IsNullOrEmpty(interface_enter::interface_name))
-	{
-		interface_enter::interface_name = WebConfigurationManager::AppSettings["Interface_Name_Key"];
-		interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
-		if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
-		if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
-		interface_enter::sockets = gcnew Dictionary<String^, ClientSocket^>();
-	}
 	init();
 }
 //class interface_enter
@@ -182,114 +167,92 @@ String^ interface_enter::GetGenericName(Type^ gt)
 	}
 	return name;
 }
-void interface_enter::doThread()
+void interface_enter::doWork()
 {
-	if (interface_enter::server == nullptr)
+	IPEndPoint^ remoteIpep = gcnew IPEndPoint(IPAddress::Any, 0);
+	while (true)
 	{
-		String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
-		int port;
-		if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
-		IPEndPoint^ ipep = gcnew IPEndPoint(IPAddress::Any, port);
-		interface_enter::server = gcnew System::Net::Sockets::Socket(ipep->AddressFamily, SocketType::Stream, ProtocolType::Tcp);
-		interface_enter::server->Bind(ipep);
-		interface_enter::server->Listen(100);
-		while (true)
+		array<Byte>^ data = interface_enter::server->Receive(remoteIpep);
+		String^ inStr = Encoding::UTF8->GetString(data, 17, data->Length - 17);
+		switch (data[16])
 		{
-			System::Net::Sockets::Socket^ clinet = interface_enter::server->Accept();
-			(gcnew Thread(gcnew ParameterizedThreadStart(this, &interface_enter::doWork)))->Start(clinet);
-		}
-	}
-}
-void interface_enter::doWork(Object^ obj)
-{
-	System::Net::Sockets::Socket^ clinet = dynamic_cast<System::Net::Sockets::Socket^>(obj);
-	if (clinet != nullptr)
-	{
-		NetworkStream^ stream = gcnew NetworkStream(clinet);
-		array<Byte>^ lenBuffer = gcnew array<Byte>(4);
-		try
+		case 0:
 		{
-			while (true)
+			json^ info = gcnew json(inStr);
+			_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
+			String^ name = InterfaceInfo->Name;
+			String^ fn = InterfaceInfo->Info->Name;
+			String^ outStr = "";
+			if (!String::IsNullOrEmpty(fn))
 			{
-				stream->Read(lenBuffer, 0, 4);
-				int len = BitConverter::ToInt32(lenBuffer, 0);
-				array<Byte>^ inBuffer = gcnew array<Byte>(len);
-				stream->Read(inBuffer, 0, len);
-				String^ inBufferStr = Encoding::UTF8->GetString(inBuffer);
-				json^ info = gcnew json(inBufferStr);
-				_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
-				String^ name = InterfaceInfo->Name;
-				String^ fn = InterfaceInfo->Info->Name;
-				String^ outBufferStr = "";
-				if (!String::IsNullOrEmpty(fn))
+				for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
 				{
-					for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
+					Type^ type = item->Key;
+					if (type->FullName == name || type->Name == name)
 					{
-						Type^ type = item->Key;
-						if (type->FullName == name || type->Name == name)
+						Interface^ obj = (Interface^)Activator::CreateInstance(type);
+						MethodInfo^ mi;
+						if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
+						else mi = type->GetMethod(fn);
+						if (mi != nullptr)
 						{
-							Interface^ obj = (Interface^)Activator::CreateInstance(type);
-							MethodInfo^ mi;
-							if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
-							else mi = type->GetMethod(fn);
-							if (mi != nullptr)
+							json^ fp = InterfaceInfo->Info->Param;
+							array<ParameterInfo^>^ pis = mi->GetParameters();
+							array<Object^>^ args = gcnew array<Object^>(pis->Length);
+							IList<int>^ outparams = gcnew List<int>();
+							for (int n = 0; n < pis->Length; n++)
 							{
-								json^ fp = InterfaceInfo->Info->Param;
-								array<ParameterInfo^>^ pis = mi->GetParameters();
-								array<Object^>^ args = gcnew array<Object^>(pis->Length);
-								IList<int>^ outparams = gcnew List<int>();
-								for (int n = 0; n < pis->Length; n++)
-								{
-									ParameterInfo^ pi = pis[n];
-									Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
-									args[n] = o;
-									if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
-								}
-								try
-								{
-									json^ r = gcnew json(mi->Invoke(obj, args));
-									if (outparams->Count > 0)
-									{
-										_OutData^ out = gcnew _OutData();
-										out->OutParams = gcnew List<Object^>();
-										for each (int n in outparams) out->OutParams->Add(args[n]);
-										out->Data = r;
-										r = gcnew json(out);
-									}
-									outBufferStr = r->ToString();
-								}
-								catch (...)
-								{
-
-								}
-								break;
+								ParameterInfo^ pi = pis[n];
+								Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
+								args[n] = o;
+								if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
 							}
+							try
+							{
+								json^ r = gcnew json(mi->Invoke(obj, args));
+								if (outparams->Count > 0)
+								{
+									_OutData^ out = gcnew _OutData();
+									out->OutParams = gcnew List<Object^>();
+									for each (int n in outparams) out->OutParams->Add(args[n]);
+									out->Data = r;
+									r = gcnew json(out);
+								}
+								outStr = r->ToString();
+							}
+							catch (...)
+							{
+
+							}
+							break;
 						}
 					}
 				}
-				array<Byte>^ data = Encoding::UTF8->GetBytes(outBufferStr);
-				stream->Write(BitConverter::GetBytes(data->Length), 0, 4);
-				stream->Write(data, 0, data->Length);
 			}
-		}
-		catch (...)
-		{
+			MemoryStream^ stream = gcnew MemoryStream();
+			stream->Write(data, 0, 16);
+			stream->WriteByte(1);
+			data = Encoding::UTF8->GetBytes(outStr);
+			stream->Write(data, 0, data->Length);
+			data = stream->ToArray();
 			delete stream;
-			delete clinet;
+			interface_enter::server->Send(data, data->Length, remoteIpep);
+			break;
+		}
+		case 1:
+		{
+			array<Byte>^ guidBuff = gcnew array<Byte>(16);
+			Buffer::BlockCopy(data, 0, guidBuff, 0, 16);
+			Guid guid = Guid(guidBuff);
+			interface_enter::result->Add(guid, inStr);
+			break;
+		}
 		}
 	}
 }
 //protected
 void interface_enter::Initialize()
 {
-	if (String::IsNullOrEmpty(interface_enter::interface_name))
-	{
-		interface_enter::interface_name = WebConfigurationManager::AppSettings["Interface_Name_Key"];
-		interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
-		if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
-		if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
-		interface_enter::sockets = gcnew Dictionary<String^, ClientSocket^>();
-	}
 	IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ l = gcnew Dictionary<Type^, IDictionary<String^, MethodInfo^>^>();
 	array<Assembly^>^ list = Init::GetAllAssembly();
 	for each (Assembly^ assembly in list)
@@ -313,11 +276,19 @@ void interface_enter::Initialize()
 		}
 	}
 	this->ilist = l;
-	if (l->Count > 0) interface_enter::_init = true;
 }
 void interface_enter::Application_Start()
 {
-	if (interface_enter::_init) (gcnew Thread(gcnew ThreadStart(this, &interface_enter::doThread)))->Start();
+	interface_enter::interface_name = WebConfigurationManager::AppSettings["Interface_Name_Key"];
+	interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
+	if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
+	if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
+	interface_enter::result = gcnew Dictionary<Guid, String^>();
+	String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
+	int port;
+	if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
+	interface_enter::server = gcnew UdpClient(port);
+	(gcnew Thread(gcnew ThreadStart(this, &interface_enter::doWork)))->Start();
 }
 void interface_enter::Application_BeginRequest()
 {
