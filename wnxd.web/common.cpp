@@ -39,3 +39,8 @@ IPAddress^ Host2IP(String^ host)
 	if (entry != nullptr) for each (IPAddress^ addr in entry->AddressList) if (addr->AddressFamily == AddressFamily::InterNetwork) return addr;
 	return nullptr;
 }
+bool IsSelfIP(IPAddress^ ip)
+{
+	for each (IPAddress^ item in Dns::GetHostEntry(Dns::GetHostName())->AddressList) if (item->AddressFamily == AddressFamily::InterNetwork && item->Address == ip->Address) return true;
+	return false;
+}

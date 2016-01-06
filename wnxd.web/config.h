@@ -1,5 +1,5 @@
 using namespace System;
-using namespace System::Xml;
+using namespace System::Xml::Linq;
 
 namespace wnxd
 {
@@ -9,7 +9,9 @@ namespace wnxd
 		{
 		private:
 			String^ _path;
-			XmlDocument^ _dom;
+			XDocument^ _dom;
+			bool _modify;
+			void doWork(Object^ state);
 		public:
 			config(String^ path);
 			~config();

@@ -77,6 +77,14 @@ namespace wnxd
 			String^ _domain, ^_namespace, ^_classname, ^_fullname;
 			IPEndPoint^ _ip;
 			void init();
+			ref class _SpinWait
+			{
+			private:
+				Guid _guid;
+			internal:
+				_SpinWait(Guid guid);
+				bool doWork();
+			};
 		protected:
 			/// <summary>
 			/// 接口所在域名,如果在web.config的&lt;appSettings&gt;中配置接口域名,则默认值为所配置的域名,否则接口域名为自身域名
@@ -118,7 +126,7 @@ namespace wnxd
 		private:
 			IDictionary<Type^, IDictionary<String^, MethodInfo^>^>^ ilist;
 			String^ GetGenericName(Type^ gt);
-			void doWork();
+			void doWork(IAsyncResult^ ar);
 			enum class _ParameterType
 			{
 				In,

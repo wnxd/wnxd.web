@@ -4,7 +4,16 @@
 using namespace wnxd::Config;
 using namespace System::IO;
 using namespace System::Text;
+using namespace System::Runtime::Caching;
+using namespace System::Collections::Generic;
 //class config
+//private
+void config::doWork(Object^ state)
+{
+	MemoryCache^ cache = MemoryCache::Default;
+	String^ key = "wnxd_config-" + this->_path;
+	cache->Remove(key, nullptr);
+}
 //public
 config::config(String^ path)
 {
@@ -12,58 +21,69 @@ config::config(String^ path)
 	String^ dir = Path::GetDirectoryName(path);
 	if (!Directory::Exists(dir)) Directory::CreateDirectory(dir);
 	if (!File::Exists(path)) file::WriteFile(path, "<wnxd></wnxd>");
-	this->_dom = gcnew XmlDocument();
-	this->_dom->LoadXml(file::ReadFile(this->_path));
+	String^ key = "wnxd_config-" + path;
+	MemoryCache^ cache = MemoryCache::Default;
+	this->_dom = dynamic_cast<XDocument^>(cache->Get(key, nullptr));
+	if (this->_dom == nullptr)
+	{
+		this->_dom = XDocument::Parse(file::ReadFile(path));
+		CacheItemPolicy^ policy = gcnew CacheItemPolicy();
+		cache->Add(key, this->_dom, policy, nullptr);
+		List<String^>^ list = gcnew List<String^>();
+		list->Add(path);
+		HostFileChangeMonitor^ monitor = gcnew HostFileChangeMonitor(list);
+		monitor->NotifyOnChanged(gcnew OnChangedCallback(this, &config::doWork));
+		policy->ChangeMonitors->Add(monitor);
+	}
 }
 config::~config()
 {
-	StringBuilder^ sb = gcnew StringBuilder();
-	StringWriter^ sw = gcnew StringWriter(sb);
-	this->_dom->Save(sw);
-	delete sw;
-	file::WriteFile(this->_path, sb->ToString());
+	if (this->_modify)
+	{
+		StringBuilder^ sb = gcnew StringBuilder();
+		StringWriter^ sw = gcnew StringWriter(sb);
+		this->_dom->Save(sw);
+		delete sw;
+		file::WriteFile(this->_path, sb->ToString());
+	}
 }
 String^ config::Read(String^ key)
 {
-	XmlNode^ node = this->_dom->SelectSingleNode("/wnxd/" + key);
-	return node == nullptr ? nullptr : node->InnerText;
+	XElement^ element = this->_dom->Root->Element(key);
+	return element == nullptr ? nullptr : element->Value;
 }
 void config::Write(String^ key, String^ val)
 {
-	XmlNode^ node = this->_dom->SelectSingleNode("/wnxd/" + key);
-	if (node == nullptr)
+	this->_modify = true;
+	XElement^ element = this->_dom->Root->Element(key);
+	if (element == nullptr)
 	{
-		node = this->_dom->CreateElement(key);
-		node->InnerText = val;
-		this->_dom->DocumentElement->AppendChild(node);
+		element = gcnew XElement(key, val);
+		this->_dom->Root->Add(element);
 	}
-	else node->InnerText = val;
+	else element->Value = val;
 }
 String^ config::GetAttr(String^ key, String^ name)
 {
-	XmlNode^ node = this->_dom->SelectSingleNode("/wnxd/" + key);
-	if (node != nullptr)
+	XElement^ element = this->_dom->Root->Element(key);
+	if (element != nullptr)
 	{
-		XmlAttribute^ attr = node->Attributes[name];
+		XAttribute^ attr = element->Attribute(name);
 		return attr == nullptr ? nullptr : attr->Value;
 	}
 	return nullptr;
 }
 void config::SetAttr(String^ key, String^ name, String^ val)
 {
-	XmlNode^ node = this->_dom->SelectSingleNode("/wnxd/" + key);
-	if (node == nullptr)
+	this->_modify = true;
+	XElement^ element = this->_dom->Root->Element(key);
+	if (element == nullptr)
 	{
-		node = this->_dom->CreateElement(key);
-		this->_dom->DocumentElement->AppendChild(node);
+		element = gcnew XElement(name);
+		this->_dom->Root->Add(element);
+		element = this->_dom->Root->Element(key);
 	}
-	XmlAttribute^ attr = node->Attributes[name];
-	if (attr == nullptr)
-	{
-		attr = this->_dom->CreateAttribute(name);
-		node->Attributes->Append(attr);
-	}
-	attr->Value = val;
+	element->SetAttributeValue(name, val);
 }
 String^ config::default::get(String^ key)
 {

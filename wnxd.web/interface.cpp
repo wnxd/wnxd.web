@@ -80,17 +80,13 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		data = stream->ToArray();
 		delete stream;
 		interface_enter::server->Send(data, data->Length, this->_ip);
-		DateTime d = DateTime::Now.AddSeconds(10);
-		do
+		_SpinWait^ sw = gcnew _SpinWait(guid);
+		if (SpinWait::SpinUntil(gcnew Func<bool>(sw, &_SpinWait::doWork), 10000))
 		{
-			if (interface_enter::result->ContainsKey(guid))
-			{
-				String^ r = interface_enter::result[guid];
-				interface_enter::result->Remove(guid);
-				return gcnew json(r);
-			}
-			Thread::Sleep(50);
-		} while (DateTime::Now < d);
+			String^ r = interface_enter::result[guid];
+			interface_enter::result->Remove(guid);
+			return gcnew json(r);
+		}
 	}
 	catch (...)
 	{
@@ -107,7 +103,7 @@ json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ arg
 	if (json::operator==(r, js::undefined))
 	{
 		r = this->Run(function, args);
-		c->Write(name, function, key, r->ToString());
+		if (json::operator!=(r, js::undefined)) c->Write(name, function, key, r->ToString());
 	}
 	return r;
 }
@@ -136,6 +132,7 @@ void InterfaceBase::init()
 	String^ d = mc->Groups[1]->Value;
 	IPAddress^ ip;
 	if (!IPAddress::TryParse(d, ip)) ip = Host2IP(d);
+	if (IsSelfIP(ip)) ip = IPAddress::Parse("127.0.0.1");
 	int port;
 	if (mc->Groups[2]->Success) port = int::Parse(mc->Groups[2]->Value);
 	else port = Interface_Port;
@@ -145,6 +142,16 @@ void InterfaceBase::init()
 InterfaceBase::InterfaceBase()
 {
 	init();
+}
+//class _SpinWait
+//internal
+InterfaceBase::_SpinWait::_SpinWait(Guid guid)
+{
+	this->_guid = guid;
+}
+bool InterfaceBase::_SpinWait::doWork()
+{
+	return interface_enter::result->ContainsKey(this->_guid);
 }
 //class interface_enter
 //private
@@ -167,87 +174,85 @@ String^ interface_enter::GetGenericName(Type^ gt)
 	}
 	return name;
 }
-void interface_enter::doWork()
+void interface_enter::doWork(IAsyncResult^ ar)
 {
 	IPEndPoint^ remoteIpep = gcnew IPEndPoint(IPAddress::Any, 0);
-	while (true)
+	array<Byte>^ data = interface_enter::server->EndReceive(ar, remoteIpep);
+	interface_enter::server->BeginReceive(gcnew AsyncCallback(this, &interface_enter::doWork), nullptr);
+	String^ inStr = Encoding::UTF8->GetString(data, 17, data->Length - 17);
+	switch (data[16])
 	{
-		array<Byte>^ data = interface_enter::server->Receive(remoteIpep);
-		String^ inStr = Encoding::UTF8->GetString(data, 17, data->Length - 17);
-		switch (data[16])
+	case 0:
+	{
+		json^ info = gcnew json(inStr);
+		_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
+		String^ name = InterfaceInfo->Name;
+		String^ fn = InterfaceInfo->Info->Name;
+		String^ outStr = "";
+		if (!String::IsNullOrEmpty(fn))
 		{
-		case 0:
-		{
-			json^ info = gcnew json(inStr);
-			_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
-			String^ name = InterfaceInfo->Name;
-			String^ fn = InterfaceInfo->Info->Name;
-			String^ outStr = "";
-			if (!String::IsNullOrEmpty(fn))
+			for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
 			{
-				for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
+				Type^ type = item->Key;
+				if (type->FullName == name || type->Name == name)
 				{
-					Type^ type = item->Key;
-					if (type->FullName == name || type->Name == name)
+					Interface^ obj = (Interface^)Activator::CreateInstance(type);
+					MethodInfo^ mi;
+					if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
+					else mi = type->GetMethod(fn);
+					if (mi != nullptr)
 					{
-						Interface^ obj = (Interface^)Activator::CreateInstance(type);
-						MethodInfo^ mi;
-						if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
-						else mi = type->GetMethod(fn);
-						if (mi != nullptr)
+						json^ fp = InterfaceInfo->Info->Param;
+						array<ParameterInfo^>^ pis = mi->GetParameters();
+						array<Object^>^ args = gcnew array<Object^>(pis->Length);
+						IList<int>^ outparams = gcnew List<int>();
+						for (int n = 0; n < pis->Length; n++)
 						{
-							json^ fp = InterfaceInfo->Info->Param;
-							array<ParameterInfo^>^ pis = mi->GetParameters();
-							array<Object^>^ args = gcnew array<Object^>(pis->Length);
-							IList<int>^ outparams = gcnew List<int>();
-							for (int n = 0; n < pis->Length; n++)
-							{
-								ParameterInfo^ pi = pis[n];
-								Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
-								args[n] = o;
-								if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
-							}
-							try
-							{
-								json^ r = gcnew json(mi->Invoke(obj, args));
-								if (outparams->Count > 0)
-								{
-									_OutData^ out = gcnew _OutData();
-									out->OutParams = gcnew List<Object^>();
-									for each (int n in outparams) out->OutParams->Add(args[n]);
-									out->Data = r;
-									r = gcnew json(out);
-								}
-								outStr = r->ToString();
-							}
-							catch (...)
-							{
-
-							}
-							break;
+							ParameterInfo^ pi = pis[n];
+							Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
+							args[n] = o;
+							if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
 						}
+						try
+						{
+							json^ r = gcnew json(mi->Invoke(obj, args));
+							if (outparams->Count > 0)
+							{
+								_OutData^ out = gcnew _OutData();
+								out->OutParams = gcnew List<Object^>();
+								for each (int n in outparams) out->OutParams->Add(args[n]);
+								out->Data = r;
+								r = gcnew json(out);
+							}
+							outStr = r->ToString();
+						}
+						catch (...)
+						{
+
+						}
+						break;
 					}
 				}
 			}
-			MemoryStream^ stream = gcnew MemoryStream();
-			stream->Write(data, 0, 16);
-			stream->WriteByte(1);
-			data = Encoding::UTF8->GetBytes(outStr);
-			stream->Write(data, 0, data->Length);
-			data = stream->ToArray();
-			delete stream;
-			interface_enter::server->Send(data, data->Length, remoteIpep);
-			break;
 		}
-		case 1:
-		{
-			array<Byte>^ guidBuff = gcnew array<Byte>(16);
-			Buffer::BlockCopy(data, 0, guidBuff, 0, 16);
-			Guid guid = Guid(guidBuff);
-			interface_enter::result->Add(guid, inStr);
-			break;
-		}
-		}
+		MemoryStream^ stream = gcnew MemoryStream();
+		stream->Write(data, 0, 16);
+		stream->WriteByte(1);
+		data = Encoding::UTF8->GetBytes(outStr);
+		stream->Write(data, 0, data->Length);
+		data = stream->ToArray();
+		delete stream;
+		interface_enter::server->Send(data, data->Length, remoteIpep);
+		break;
+	}
+	case 1:
+	{
+		array<Byte>^ guidBuff = gcnew array<Byte>(16);
+		Buffer::BlockCopy(data, 0, guidBuff, 0, 16);
+		Guid guid = Guid(guidBuff);
+		interface_enter::result->Add(guid, inStr);
+		break;
+	}
 	}
 }
 //protected
@@ -288,7 +293,7 @@ void interface_enter::Application_Start()
 	int port;
 	if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
 	interface_enter::server = gcnew UdpClient(port);
-	(gcnew Thread(gcnew ThreadStart(this, &interface_enter::doWork)))->Start();
+	interface_enter::server->BeginReceive(gcnew AsyncCallback(this, &interface_enter::doWork), nullptr);
 }
 void interface_enter::Application_BeginRequest()
 {

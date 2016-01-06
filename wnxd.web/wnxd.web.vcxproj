@@ -84,8 +84,10 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="wnxd.javascript">
       <HintPath>..\Release\wnxd.javascript.dll</HintPath>
     </Reference>
