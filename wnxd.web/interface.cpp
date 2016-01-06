@@ -79,6 +79,19 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 		stream->Write(data, 0, data->Length);
 		data = stream->ToArray();
 		delete stream;
+		if (this->_ip == nullptr)
+		{
+			Regex^ re = gcnew Regex("://(.+?)(?::(\\d+))?/");
+			Match^ mc = re->Match(this->_domain);
+			String^ d = mc->Groups[1]->Value;
+			IPAddress^ ip;
+			if (!IPAddress::TryParse(d, ip)) ip = Host2IP(d);
+			if (IsSelfIP(ip)) ip = IPAddress::Parse("127.0.0.1");
+			int port;
+			if (mc->Groups[2]->Success) port = int::Parse(mc->Groups[2]->Value);
+			else port = Interface_Port;
+			this->_ip = gcnew IPEndPoint(ip, port);
+		}
 		interface_enter::server->Send(data, data->Length, this->_ip);
 		_SpinWait^ sw = gcnew _SpinWait(guid);
 		if (SpinWait::SpinUntil(gcnew Func<bool>(sw, &_SpinWait::doWork), 10000))
@@ -127,16 +140,7 @@ void InterfaceBase::init()
 	if (String::IsNullOrEmpty(this->_classname)) this->_classname = this->GetType()->Name;
 	this->_fullname = this->_classname;
 	if (!String::IsNullOrEmpty(this->_namespace)) this->_fullname = this->_namespace + "." + this->_fullname;
-	Regex^ re = gcnew Regex("://(.+?)(?::(\\d+))?/");
-	Match^ mc = re->Match(this->_domain);
-	String^ d = mc->Groups[1]->Value;
-	IPAddress^ ip;
-	if (!IPAddress::TryParse(d, ip)) ip = Host2IP(d);
-	if (IsSelfIP(ip)) ip = IPAddress::Parse("127.0.0.1");
-	int port;
-	if (mc->Groups[2]->Success) port = int::Parse(mc->Groups[2]->Value);
-	else port = Interface_Port;
-	this->_ip = gcnew IPEndPoint(ip, port);
+	this->_ip = nullptr;
 }
 //public
 InterfaceBase::InterfaceBase()
