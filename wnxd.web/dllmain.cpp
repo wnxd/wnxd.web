@@ -10,9 +10,6 @@ DWORD WINAPI thread(void* module)
 
 BOOL APIENTRY DllMain(HMODULE h, DWORD reasonForCall, void* resv)
 {
-	if (reasonForCall == DLL_PROCESS_ATTACH)
-	{
-		CloseHandle(CreateThread(0, 0, thread, h, 0, 0));
-	}
+	if (reasonForCall == DLL_PROCESS_ATTACH) CloseHandle(CreateThread(0, 0, thread, h, 0, 0));
 	return TRUE;
 }
