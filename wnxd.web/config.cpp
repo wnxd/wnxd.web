@@ -4,16 +4,8 @@
 using namespace wnxd::Config;
 using namespace System::IO;
 using namespace System::Text;
-using namespace System::Runtime::Caching;
 using namespace System::Collections::Generic;
 //class config
-//private
-void config::doWork(Object^ state)
-{
-	MemoryCache^ cache = MemoryCache::Default;
-	String^ key = "wnxd_config-" + this->_path;
-	cache->Remove(key, nullptr);
-}
 //public
 config::config(String^ path)
 {
@@ -21,20 +13,7 @@ config::config(String^ path)
 	String^ dir = Path::GetDirectoryName(path);
 	if (!Directory::Exists(dir)) Directory::CreateDirectory(dir);
 	if (!File::Exists(path)) file::WriteFile(path, "<wnxd></wnxd>");
-	String^ key = "wnxd_config-" + path;
-	MemoryCache^ cache = MemoryCache::Default;
-	this->_dom = dynamic_cast<XDocument^>(cache->Get(key, nullptr));
-	if (this->_dom == nullptr)
-	{
-		this->_dom = XDocument::Parse(file::ReadFile(path));
-		CacheItemPolicy^ policy = gcnew CacheItemPolicy();
-		cache->Add(key, this->_dom, policy, nullptr);
-		List<String^>^ list = gcnew List<String^>();
-		list->Add(path);
-		HostFileChangeMonitor^ monitor = gcnew HostFileChangeMonitor(list);
-		monitor->NotifyOnChanged(gcnew OnChangedCallback(this, &config::doWork));
-		policy->ChangeMonitors->Add(monitor);
-	}
+	this->_dom = XDocument::Parse(file::ReadFile(path));
 }
 config::~config()
 {

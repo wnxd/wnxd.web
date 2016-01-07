@@ -11,7 +11,6 @@ namespace wnxd
 			String^ _path;
 			XDocument^ _dom;
 			bool _modify;
-			void doWork(Object^ state);
 		public:
 			config(String^ path);
 			~config();
