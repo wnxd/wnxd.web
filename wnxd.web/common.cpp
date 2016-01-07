@@ -3,7 +3,6 @@
 using namespace System::Text;
 using namespace System::Globalization;
 using namespace System::Security::Cryptography;
-using namespace System::Net::Sockets;
 
 String^ MD5Encrypt(String^ strText)
 {
@@ -32,15 +31,4 @@ String^ DESDecrypt(String^ sInputString, String^ sKey)
 	ICryptoTransform^ desencrypt = DES->CreateDecryptor();
 	array<Byte>^ result = desencrypt->TransformFinalBlock(data, 0, data->Length);
 	return Encoding::UTF8->GetString(result);
-}
-IPAddress^ Host2IP(String^ host)
-{
-	IPHostEntry^ entry = Dns::GetHostEntry(host);
-	if (entry != nullptr) for each (IPAddress^ addr in entry->AddressList) if (addr->AddressFamily == AddressFamily::InterNetwork) return addr;
-	return nullptr;
-}
-bool IsSelfIP(IPAddress^ ip)
-{
-	for each (IPAddress^ item in Dns::GetHostEntry(Dns::GetHostName())->AddressList) if (item->AddressFamily == AddressFamily::InterNetwork && item->Address == ip->Address) return true;
-	return false;
 }
