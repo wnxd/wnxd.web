@@ -3,8 +3,6 @@
 using namespace wnxd::javascript;
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace System::Net;
-using namespace System::Net::Sockets;
 
 #define Interface_Name_Key "wnxd: interface_name"
 #define Interface_Data_Key "wnxd: interface_data"
