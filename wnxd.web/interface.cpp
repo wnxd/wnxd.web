@@ -11,6 +11,7 @@ using namespace System::IO;
 using namespace System::Text::RegularExpressions;
 using namespace System::Diagnostics;
 using namespace System::Threading;
+using namespace System::Runtime::Caching;
 //class MethodAttribute
 //public
 String^ Interface::MethodAttribute::summary::get()
@@ -109,14 +110,18 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 }
 json^ InterfaceBase::GetCache(int time, String^ function, ...array<Object^>^ args)
 {
-	cache^ c = gcnew cache("interface", time);
-	String^ name = this->_domain + "-" + this->_fullname;
-	String^ key = (gcnew json(args))->ToString();
-	json^ r = gcnew json(c->Read(name, function, key));
-	if (json::operator==(r, js::undefined))
+	MemoryCache^ cache = MemoryCache::Default;
+	String^ key = "interface:" + MD5Encrypt(this->_domain + "-" + this->_fullname + function + (gcnew json(args))->ToString());
+	json^ r = dynamic_cast<json^>(cache->Get(key, nullptr));
+	if (r == nullptr || json::operator==(r, js::undefined))
 	{
 		r = this->Run(function, args);
-		if (json::operator!=(r, js::undefined)) c->Write(name, function, key, r->ToString());
+		if (json::operator!=(r, js::undefined))
+		{
+			CacheItemPolicy^ policy = gcnew CacheItemPolicy();
+			policy->AbsoluteExpiration = DateTime::Now.AddSeconds(time);
+			cache->Add(key, r, policy, nullptr);
+		}
 	}
 	return r;
 }
