@@ -1,17 +1,18 @@
 #include "load.h"
-#include "config.h"
+#include "common.h"
 #include "Resource.h"
 
 using namespace wnxd::Web;
-using namespace wnxd::Config;
 using namespace System::Text;
 using namespace System::IO;
+using namespace System::Runtime::Caching;
 //class Load
 //private
 bool Load::_SaveHtml()
 {
-	cache^ c = gcnew cache("load", this->_cache * 3600);
-	String^ ret = c->Read(this->Page->Request->Url->PathAndQuery, this->ClientID);
+	MemoryCache^ cache = MemoryCache::Default;
+	String^ key = "load:" + MD5Encrypt(this->Page->Request->Url->PathAndQuery + "/" + this->ClientID);
+	String^ ret = dynamic_cast<String^>(cache->Get(key, nullptr));
 	if (String::IsNullOrWhiteSpace(ret))
 	{
 		StringBuilder^ html = gcnew StringBuilder();
@@ -21,9 +22,10 @@ bool Load::_SaveHtml()
 		delete htw;
 		delete sw;
 		ret = html->ToString();
-		c->Write(this->Page->Request->Url->PathAndQuery, this->ClientID, HttpUtility::UrlEncode(ret));
+		CacheItemPolicy^ policy = gcnew CacheItemPolicy();
+		policy->AbsoluteExpiration = DateTime::Now.AddHours(this->_cache);
+		cache->Add(key, ret, policy, nullptr);
 	}
-	else ret = HttpUtility::UrlDecode(ret);
 	if (this->_refresh)
 	{
 		this->Page->Response->Clear();
@@ -96,14 +98,6 @@ void Load::OnInit(EventArgs^ e)
 	String^ id = HttpContext::Current->Request["wnxd_load"];
 	if (!String::IsNullOrEmpty(id))
 	{
-		cache^ c = gcnew cache("load", this->_cache * 3600);
-		String^ html = c->Read(HttpContext::Current->Request->Url->PathAndQuery, id);
-		if (!String::IsNullOrWhiteSpace(html))
-		{
-			HttpContext::Current->Response->Clear();
-			HttpContext::Current->Response->Write(HttpUtility::UrlDecode(html));
-			HttpContext::Current->Response->End();
-		}
 		this->_jump = true;
 		this->_refresh = id == this->ClientID;
 	}
@@ -142,11 +136,12 @@ void Load::load_enter::Application_BeginRequest()
 	String^ id = this->Request["wnxd_load"];
 	if (!String::IsNullOrEmpty(id))
 	{
-		cache^ c = gcnew cache("load", 0);
-		String^ html = c->Read(this->Request->Url->PathAndQuery, id);
+		MemoryCache^ cache = MemoryCache::Default;
+		String^ key = "load:" + MD5Encrypt(this->Request->Url->PathAndQuery + "/" + id);
+		String^ html = dynamic_cast<String^>(cache->Get(key, nullptr));
 		if (!String::IsNullOrWhiteSpace(html))
 		{
-			this->Response->Write(HttpUtility::UrlDecode(html));
+			this->Response->Write(html);
 			this->Response->End();
 		}
 	}

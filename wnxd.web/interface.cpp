@@ -65,42 +65,27 @@ json^ InterfaceBase::Run(String^ function, ...array<Object^>^ args)
 {
 	try
 	{
-		_InterfaceInfo^ InterfaceInfo = gcnew _InterfaceInfo();
-		InterfaceInfo->Name = this->_fullname;
 		_CallInfo^ CallInfo = gcnew _CallInfo();
 		CallInfo->Name = function;
 		CallInfo->Param = gcnew json(args);
-		InterfaceInfo->Info = CallInfo;
-		json^ param = gcnew json(InterfaceInfo);
-		MemoryStream^ stream = gcnew MemoryStream();
-		Guid guid = Guid::NewGuid();
-		stream->Write(guid.ToByteArray(), 0, 16);
-		stream->WriteByte(0);
-		array<Byte>^ data = Encoding::UTF8->GetBytes(param->ToString());
-		stream->Write(data, 0, data->Length);
-		data = stream->ToArray();
-		delete stream;
-		if (this->_ip == nullptr)
-		{
-			Regex^ re = gcnew Regex("://(.+?)(?::(\\d+))?/");
-			Match^ mc = re->Match(this->_domain);
-			String^ d = mc->Groups[1]->Value;
-			IPAddress^ ip;
-			if (!IPAddress::TryParse(d, ip)) ip = Host2IP(d);
-			if (IsSelfIP(ip)) ip = IPAddress::Parse("127.0.0.1");
-			int port;
-			if (mc->Groups[2]->Success) port = int::Parse(mc->Groups[2]->Value);
-			else port = Interface_Port;
-			this->_ip = gcnew IPEndPoint(ip, port);
-		}
-		interface_enter::server->Send(data, data->Length, this->_ip);
-		_SpinWait^ sw = gcnew _SpinWait(guid);
-		if (SpinWait::SpinUntil(gcnew Func<bool>(sw, &_SpinWait::doWork), 10000))
-		{
-			String^ r = interface_enter::result[guid];
-			interface_enter::result->Remove(guid);
-			return gcnew json(r);
-		}
+		json^ param = gcnew json(CallInfo);
+		WebRequest^ request = WebRequest::Create(this->interface_url);
+		request->Method = "POST";
+		request->ContentType = "application/x-www-form-urlencoded";
+		array<Byte>^ data = Encoding::UTF8->GetBytes(DESEncrypt(param->ToString(), interface_enter::interface_data));
+		request->ContentLength = data->Length;
+		Stream^ dataStream = request->GetRequestStream();
+		dataStream->Write(data, 0, data->Length);
+		dataStream->Flush();
+		delete dataStream;
+		WebResponse^ response = request->GetResponse();
+		dataStream = response->GetResponseStream();
+		StreamReader^ reader = gcnew StreamReader(dataStream);
+		String^ responseData = reader->ReadToEnd();
+		delete reader;
+		delete dataStream;
+		delete response;
+		if (!String::IsNullOrEmpty(responseData)) return gcnew json(DESDecrypt(responseData, interface_enter::interface_data));
 	}
 	catch (...)
 	{
@@ -145,22 +130,12 @@ void InterfaceBase::init()
 	if (String::IsNullOrEmpty(this->_classname)) this->_classname = this->GetType()->Name;
 	this->_fullname = this->_classname;
 	if (!String::IsNullOrEmpty(this->_namespace)) this->_fullname = this->_namespace + "." + this->_fullname;
-	this->_ip = nullptr;
+	this->interface_url = this->_domain + "wnxd.aspx?wnxd_interface=" + HttpUtility::UrlEncode(DESEncrypt(this->_fullname, interface_enter::interface_name));
 }
 //public
 InterfaceBase::InterfaceBase()
 {
 	init();
-}
-//class _SpinWait
-//internal
-InterfaceBase::_SpinWait::_SpinWait(Guid guid)
-{
-	this->_guid = guid;
-}
-bool InterfaceBase::_SpinWait::doWork()
-{
-	return interface_enter::result->ContainsKey(this->_guid);
 }
 //class interface_enter
 //private
@@ -182,87 +157,6 @@ String^ interface_enter::GetGenericName(Type^ gt)
 		name += ">";
 	}
 	return name;
-}
-void interface_enter::doWork(IAsyncResult^ ar)
-{
-	IPEndPoint^ remoteIpep = gcnew IPEndPoint(IPAddress::Any, 0);
-	array<Byte>^ data = interface_enter::server->EndReceive(ar, remoteIpep);
-	interface_enter::server->BeginReceive(gcnew AsyncCallback(this, &interface_enter::doWork), nullptr);
-	String^ inStr = Encoding::UTF8->GetString(data, 17, data->Length - 17);
-	switch (data[16])
-	{
-	case 0:
-	{
-		json^ info = gcnew json(inStr);
-		_InterfaceInfo^ InterfaceInfo = (_InterfaceInfo^)info->TryConvert(_InterfaceInfo::typeid);
-		String^ name = InterfaceInfo->Name;
-		String^ fn = InterfaceInfo->Info->Name;
-		String^ outStr = "";
-		if (!String::IsNullOrEmpty(fn))
-		{
-			for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
-			{
-				Type^ type = item->Key;
-				if (type->FullName == name || type->Name == name)
-				{
-					Interface^ obj = (Interface^)Activator::CreateInstance(type);
-					MethodInfo^ mi;
-					if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
-					else mi = type->GetMethod(fn);
-					if (mi != nullptr)
-					{
-						json^ fp = InterfaceInfo->Info->Param;
-						array<ParameterInfo^>^ pis = mi->GetParameters();
-						array<Object^>^ args = gcnew array<Object^>(pis->Length);
-						IList<int>^ outparams = gcnew List<int>();
-						for (int n = 0; n < pis->Length; n++)
-						{
-							ParameterInfo^ pi = pis[n];
-							Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
-							args[n] = o;
-							if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
-						}
-						try
-						{
-							json^ r = gcnew json(mi->Invoke(obj, args));
-							if (outparams->Count > 0)
-							{
-								_OutData^ out = gcnew _OutData();
-								out->OutParams = gcnew List<Object^>();
-								for each (int n in outparams) out->OutParams->Add(args[n]);
-								out->Data = r;
-								r = gcnew json(out);
-							}
-							outStr = r->ToString();
-						}
-						catch (...)
-						{
-
-						}
-						break;
-					}
-				}
-			}
-		}
-		MemoryStream^ stream = gcnew MemoryStream();
-		stream->Write(data, 0, 16);
-		stream->WriteByte(1);
-		data = Encoding::UTF8->GetBytes(outStr);
-		stream->Write(data, 0, data->Length);
-		data = stream->ToArray();
-		delete stream;
-		interface_enter::server->Send(data, data->Length, remoteIpep);
-		break;
-	}
-	case 1:
-	{
-		array<Byte>^ guidBuff = gcnew array<Byte>(16);
-		Buffer::BlockCopy(data, 0, guidBuff, 0, 16);
-		Guid guid = Guid(guidBuff);
-		interface_enter::result->Add(guid, inStr);
-		break;
-	}
-	}
 }
 //protected
 void interface_enter::Initialize()
@@ -297,12 +191,6 @@ void interface_enter::Application_Start()
 	interface_enter::interface_data = WebConfigurationManager::AppSettings["Interface_Data_Key"];
 	if (String::IsNullOrEmpty(interface_enter::interface_name)) interface_enter::interface_name = Interface_Name_Key;
 	if (String::IsNullOrEmpty(interface_enter::interface_data)) interface_enter::interface_data = Interface_Data_Key;
-	interface_enter::result = gcnew Dictionary<Guid, String^>();
-	String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
-	int port;
-	if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
-	interface_enter::server = gcnew UdpClient(port);
-	interface_enter::server->BeginReceive(gcnew AsyncCallback(this, &interface_enter::doWork), nullptr);
 }
 void interface_enter::Application_BeginRequest()
 {
@@ -335,10 +223,6 @@ void interface_enter::Application_BeginRequest()
 								if (item->Key->FullName == name)
 								{
 									_ClassInfo^ d = gcnew _ClassInfo();
-									String^ t_port = WebConfigurationManager::AppSettings["Interface_Port"];
-									int port;
-									if (String::IsNullOrEmpty(t_port) || !int::TryParse(t_port, port)) port = Interface_Port;
-									d->Domain = this->Request->Url->Host + ":" + port.ToString();
 									d->Namespace = item->Key->Namespace;
 									d->ClassName = item->Key->Name;
 									IList<_MethodInfo^>^ Methods = gcnew List<_MethodInfo^>();
@@ -382,6 +266,48 @@ void interface_enter::Application_BeginRequest()
 						}
 					}
 					this->Response->Write(DESEncrypt(r->ToString(), interface_enter::interface_data));
+				}
+				else
+				{
+					if (!String::IsNullOrEmpty(fn))
+					{
+						for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
+						{
+							Type^ type = item->Key;
+							if (type->FullName == name || type->Name == name)
+							{
+								Interface^ obj = (Interface^)Activator::CreateInstance(type);
+								MethodInfo^ mi;
+								if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
+								else mi = type->GetMethod(fn);
+								if (mi != nullptr)
+								{
+									json^ fp = CallInfo->Param;
+									array<ParameterInfo^>^ pis = mi->GetParameters();
+									array<Object^>^ args = gcnew array<Object^>(pis->Length);
+									IList<int>^ outparams = gcnew List<int>();
+									for (int n = 0; n < pis->Length; n++)
+									{
+										ParameterInfo^ pi = pis[n];
+										Object^ o = ((json^)fp[n])->TryConvert(pi->ParameterType);
+										args[n] = o;
+										if (pi->IsOut || pi->IsRetval || pi->ParameterType->IsByRef) outparams->Add(n);
+									}
+									json^ r = gcnew json(mi->Invoke(obj, args));
+									if (outparams->Count > 0)
+									{
+										_OutData^ out = gcnew _OutData();
+										out->OutParams = gcnew List<Object^>();
+										for each (int n in outparams) out->OutParams->Add(args[n]);
+										out->Data = r;
+										r = gcnew json(out);
+									}
+									this->Response->Write(DESEncrypt(r->ToString(), interface_enter::interface_data));
+									break;
+								}
+							}
+						}
+					}
 				}
 				this->Response->End();
 			}
