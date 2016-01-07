@@ -100,6 +100,13 @@ namespace wnxd
 			/// <param name="args">参数</param>
 			/// <returns></returns>
 			json^ Run(String^ function, ...array<Object^>^ args);
+			/// <summary>
+			/// 从缓存读取该方法的数据,当缓存没有数据则调用指定方法
+			/// </summary>
+			/// <param name="time">缓存时间,单位为秒</param>
+			/// <param name="function">方法名</param>
+			/// <param name="args">参数</param>
+			/// <returns></returns>
 			json^ GetCache(int time, String^ function, ...array<Object^>^ args);
 		public:
 			InterfaceBase();
