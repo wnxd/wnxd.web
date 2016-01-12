@@ -217,14 +217,14 @@ void Init::_callback(String^ method, ...array<Object^>^ parameters)
 	if (Init::_enter_list != nullptr)
 	{
 		MethodInfo^ mi = Enter::typeid->GetMethod(method, all, nullptr, Type::EmptyTypes, nullptr);
-		for each (KeyValuePair<Type^, Enter^>^ kv in Init::_enter_list)
+		for each (KeyValuePair<Type^, Enter^> kv in Init::_enter_list)
 		{
-			Enter^ obj = kv->Value;
+			Enter^ obj = kv.Value;
 			if (obj == nullptr)
 			{
-				obj = (Enter^)Activator::CreateInstance(kv->Key);
+				obj = (Enter^)Activator::CreateInstance(kv.Key);
 				if (obj == nullptr) continue;
-				else Init::_enter_list[kv->Key] = obj;
+				else Init::_enter_list[kv.Key] = obj;
 			}
 			mi->Invoke(obj, nullptr);
 		}
@@ -232,20 +232,20 @@ void Init::_callback(String^ method, ...array<Object^>^ parameters)
 }
 void Init::_HttpModule_Init()
 {
-	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^>^ kv in Init::_module_list) if (kv->Value != nullptr) kv->Value->Init(this);
+	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^> kv in Init::_module_list) if (kv.Value != nullptr) kv.Value->Init(this);
 }
 void Init::_HttpModule_Dispose()
 {
-	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^>^ kv in Init::_module_list) if (kv->Value != nullptr) delete kv->Value;
+	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^> kv in Init::_module_list) if (kv.Value != nullptr) delete kv.Value;
 }
 void Init::_HttpHandler()
 {
 	if (Init::_handler_list != nullptr)
 	{
-		for each (KeyValuePair<Type^, IHttpHandler^>^ kv in Init::_handler_list)
+		for each (KeyValuePair<Type^, IHttpHandler^> kv in Init::_handler_list)
 		{
-			Enter^ enter = dynamic_cast<Enter^>(kv->Value);
-			if (enter != nullptr && kv->Value->IsReusable)
+			Enter^ enter = dynamic_cast<Enter^>(kv.Value);
+			if (enter != nullptr && kv.Value->IsReusable)
 			{
 				String^ HttpHandlerPath = enter->_HttpHandlerPath;
 				if (!String::IsNullOrEmpty(HttpHandlerPath))
@@ -254,7 +254,7 @@ void Init::_HttpHandler()
 					Regex^ regex = gcnew Regex(HttpHandlerPath, RegexOptions::IgnoreCase);
 					if (regex->IsMatch(this->Request->Url->AbsolutePath))
 					{
-						kv->Value->ProcessRequest(this->Context);
+						kv.Value->ProcessRequest(this->Context);
 						this->Response->End();
 					}
 				}

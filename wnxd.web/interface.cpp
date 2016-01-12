@@ -217,19 +217,19 @@ void interface_enter::Application_BeginRequest()
 						for (int i = 0; i < list->length.Value; i++)
 						{
 							name = (String^)((json^)list[i])->TryConvert(String::typeid);
-							for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
+							for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^> item in this->ilist)
 							{
-								if (item->Key->FullName == name)
+								if (item.Key->FullName == name)
 								{
 									_ClassInfo^ d = gcnew _ClassInfo();
-									d->Namespace = item->Key->Namespace;
-									d->ClassName = item->Key->Name;
+									d->Namespace = item.Key->Namespace;
+									d->ClassName = item.Key->Name;
 									IList<_MethodInfo^>^ Methods = gcnew List<_MethodInfo^>();
-									for each (KeyValuePair<String^, MethodInfo^>^ item2 in item->Value)
+									for each (KeyValuePair<String^, MethodInfo^> item2 in item.Value)
 									{
-										MethodInfo^ mi = item2->Value;
+										MethodInfo^ mi = item2.Value;
 										_MethodInfo^ t = gcnew _MethodInfo();
-										t->MethodToken = item2->Key;
+										t->MethodToken = item2.Key;
 										t->MethodName = mi->Name;
 										Type^ T = mi->ReturnType;
 										t->ReturnType = T->IsGenericType ? this->GetGenericName(T) : T->FullName;
@@ -270,14 +270,14 @@ void interface_enter::Application_BeginRequest()
 				{
 					if (!String::IsNullOrEmpty(fn))
 					{
-						for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^>^ item in this->ilist)
+						for each (KeyValuePair<Type^, IDictionary<String^, MethodInfo^>^> item in this->ilist)
 						{
-							Type^ type = item->Key;
+							Type^ type = item.Key;
 							if (type->FullName == name || type->Name == name)
 							{
 								Interface^ obj = (Interface^)Activator::CreateInstance(type);
 								MethodInfo^ mi;
-								if (item->Value->ContainsKey(fn)) mi = item->Value[fn];
+								if (item.Value->ContainsKey(fn)) mi = item.Value[fn];
 								else mi = type->GetMethod(fn);
 								if (mi != nullptr)
 								{
