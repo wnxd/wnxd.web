@@ -236,7 +236,11 @@ void Init::_HttpModule_Init()
 }
 void Init::_HttpModule_Dispose()
 {
-	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^> kv in Init::_module_list) if (kv.Value != nullptr) delete kv.Value;
+	if (Init::_module_list != nullptr)
+	{
+		MethodInfo^ Dispose = IHttpModule::typeid->GetMethod("Dispose");
+		for each (KeyValuePair<Type^, IHttpModule^> kv in Init::_module_list) if (kv.Value != nullptr) Dispose->Invoke(kv.Value, nullptr);
+	}
 }
 void Init::_HttpHandler()
 {
