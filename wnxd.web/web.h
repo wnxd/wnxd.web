@@ -1,3 +1,5 @@
+#include "init.h"
+
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Web::UI;
@@ -14,6 +16,11 @@ namespace wnxd
 		public ref class Web : Control
 		{
 		private:
+			ref class web_enter : Enter
+			{
+			protected:
+				virtual void Application_BeginRequest() override;
+			};
 			String^ _prefix, ^_script, ^_html, ^_targeturl;
 			static Web^ _FindFirst(Control^ control);
 			static Web^ _Find(Control^ control, String^ id);

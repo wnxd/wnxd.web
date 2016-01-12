@@ -109,7 +109,7 @@ void Load::Render(HtmlTextWriter^ writer)
 	{
 		StringBuilder^ sb = gcnew StringBuilder();
 		Load^ load = FindFirst();
-		if (!load->Insert) sb->AppendFormat("<script type=\"text/javascript\">{0}</script>", Resource::load->Replace("$url$", this->Page->Request->Url->PathAndQuery));
+		if (!load->Insert) sb->AppendFormat("<script type=\"text/javascript\" src=\"/wnxd.aspx?wnxd_js=load&url={0}\"></script>", HttpUtility::UrlEncode(this->Page->Request->Url->PathAndQuery));
 		load->Insert = true;
 		String^ img_html = String::Empty;
 		if (!String::IsNullOrEmpty(this->Img)) img_html = String::Format("<div style=\"position: relative; left: 50%; top: 50%; display: inline-block;\"><img src=\"{0}\" style=\"position: relative; left: -50%; top: -50%;\" /></div>", this->Img);
@@ -129,20 +129,28 @@ array<Load^>^ Load::Find()
 {
 	return _Find((Control^)HttpContext::Current->CurrentHandler)->ToArray();
 }
-//load_enter
+//class load_enter
 //protected
 void Load::load_enter::Application_BeginRequest()
 {
-	String^ id = this->Request["wnxd_load"];
-	if (!String::IsNullOrEmpty(id))
+	if (this->Request->QueryString["wnxd_js"] == "load")
 	{
-		MemoryCache^ cache = MemoryCache::Default;
-		String^ key = "load:" + MD5Encrypt(this->Request->Url->PathAndQuery + "/" + id);
-		String^ html = dynamic_cast<String^>(cache->Get(key, nullptr));
-		if (!String::IsNullOrWhiteSpace(html))
+		this->Response->Write(Resource::load->Replace("$url$", HttpUtility::UrlDecode(this->Request->QueryString["url"])));
+		this->Response->End();
+	}
+	else
+	{
+		String^ id = this->Request["wnxd_load"];
+		if (!String::IsNullOrEmpty(id))
 		{
-			this->Response->Write(html);
-			this->Response->End();
+			MemoryCache^ cache = MemoryCache::Default;
+			String^ key = "load:" + MD5Encrypt(this->Request->Url->PathAndQuery + "/" + id);
+			String^ html = dynamic_cast<String^>(cache->Get(key, nullptr));
+			if (!String::IsNullOrWhiteSpace(html))
+			{
+				this->Response->Write(html);
+				this->Response->End();
+			}
 		}
 	}
 }

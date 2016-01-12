@@ -158,7 +158,7 @@ void wnxd::Web::Web::Render(HtmlTextWriter^ writer)
 	if (!String::IsNullOrEmpty(this->_html)) writer->Write(this->_html);
 	String^ text = this->_script;
 	Web^ web = FindFirst();
-	if (!web->Insert) text = Resource::web->Replace("$url$", this->TargetUrl) + text;
+	if (!web->Insert) writer->Write(String::Format("<script type=\"text/javascript\" src=\"/wnxd.aspx?wnxd_js=web&url={0}\"></script>", HttpUtility::UrlEncode(this->TargetUrl)));
 	this->Insert = true;
 	if (!String::IsNullOrEmpty(text)) writer->Write("<script type=\"text/javascript\">{0}</script>", text);
 }
@@ -181,4 +181,14 @@ wnxd::Web::Web^ wnxd::Web::Web::Find(String^ id)
 array<wnxd::Web::Web^>^ wnxd::Web::Web::Find()
 {
 	return _Find((Control^)HttpContext::Current->CurrentHandler)->ToArray();
+}
+//class web_enter
+//protected
+void wnxd::Web::Web::web_enter::Application_BeginRequest()
+{
+	if (this->Request->QueryString["wnxd_js"] == "web")
+	{
+		this->Response->Write(Resource::web->Replace("$url$", HttpUtility::UrlDecode(this->Request->QueryString["url"])));
+		this->Response->End();
+	}
 }
