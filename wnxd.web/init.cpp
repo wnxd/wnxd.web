@@ -142,7 +142,9 @@ void Init::_init()
 	array<Assembly^>^ list = GetAllAssembly();
 	config^ cf = gcnew config(AppDomain::CurrentDomain->BaseDirectory + "wnxd/wnxd_config.tmp");
 	String^ className = cf["old_Global"];
-	_enter_list = gcnew Dictionary<Type^, Enter^>();
+	Init::_enter_list = gcnew Dictionary<Type^, Enter^>();
+	Init::_handler_list = gcnew Dictionary<Type^, IHttpHandler^>();
+	Init::_module_list = gcnew Dictionary<Type^, IHttpModule^>();
 	for (int i = 0; i < list->Length; i++)
 	{
 		if (this->_old_app == nullptr && !String::IsNullOrEmpty(className))
@@ -170,7 +172,14 @@ void Init::_init()
 				if (Enter::typeid->IsAssignableFrom(T) && T != Enter::typeid)
 				{
 					Enter^ e = (Enter^)Activator::CreateInstance(T);
-					if (e != nullptr) _enter_list->Add(T, e);
+					if (e != nullptr)
+					{
+						Init::_enter_list->Add(T, e);
+						IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(e);
+						if (HttpHandler != nullptr) Init::_handler_list->Add(T, HttpHandler);
+						IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(e);
+						if (HttpModule != nullptr) Init::_module_list->Add(T, HttpModule);
+					}
 				}
 			}
 		}
@@ -205,17 +214,17 @@ void Init::_callback(String^ method, ...array<Object^>^ parameters)
 			else if (len == 2) mi->Invoke(this->_old_app, parameters);
 		}
 	}
-	if (_enter_list != nullptr)
+	if (Init::_enter_list != nullptr)
 	{
 		MethodInfo^ mi = Enter::typeid->GetMethod(method, all, nullptr, Type::EmptyTypes, nullptr);
-		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
+		for each (KeyValuePair<Type^, Enter^>^ kv in Init::_enter_list)
 		{
 			Enter^ obj = kv->Value;
 			if (obj == nullptr)
 			{
 				obj = (Enter^)Activator::CreateInstance(kv->Key);
 				if (obj == nullptr) continue;
-				else _enter_list[kv->Key] = obj;
+				else Init::_enter_list[kv->Key] = obj;
 			}
 			mi->Invoke(obj, nullptr);
 		}
@@ -223,53 +232,30 @@ void Init::_callback(String^ method, ...array<Object^>^ parameters)
 }
 void Init::_HttpModule_Init()
 {
-	if (_enter_list != nullptr)
-	{
-		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
-		{
-			if (IHttpModule::typeid->IsAssignableFrom(kv->Key))
-			{
-				IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
-				if (HttpModule != nullptr) HttpModule->Init(this);
-			}
-		}
-	}
+	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^>^ kv in Init::_module_list) if (kv->Value != nullptr) kv->Value->Init(this);
 }
 void Init::_HttpModule_Dispose()
 {
-	if (_enter_list != nullptr)
-	{
-		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
-		{
-			if (IHttpModule::typeid->IsAssignableFrom(kv->Key))
-			{
-				IHttpModule^ HttpModule = dynamic_cast<IHttpModule^>(kv->Value);
-				if (HttpModule != nullptr) delete HttpModule;
-			}
-		}
-	}
+	if (Init::_module_list != nullptr) for each (KeyValuePair<Type^, IHttpModule^>^ kv in Init::_module_list) if (kv->Value != nullptr) delete kv->Value;
 }
 void Init::_HttpHandler()
 {
-	if (_enter_list != nullptr)
+	if (Init::_handler_list != nullptr)
 	{
-		for each (KeyValuePair<Type^, Enter^>^ kv in _enter_list)
+		for each (KeyValuePair<Type^, IHttpHandler^>^ kv in Init::_handler_list)
 		{
-			if (IHttpHandler::typeid->IsAssignableFrom(kv->Key))
+			Enter^ enter = dynamic_cast<Enter^>(kv->Value);
+			if (enter != nullptr && kv->Value->IsReusable)
 			{
-				IHttpHandler^ HttpHandler = dynamic_cast<IHttpHandler^>(kv->Value);
-				if (HttpHandler != nullptr && HttpHandler->IsReusable)
+				String^ HttpHandlerPath = enter->_HttpHandlerPath;
+				if (!String::IsNullOrEmpty(HttpHandlerPath))
 				{
-					String^ HttpHandlerPath = kv->Value->_HttpHandlerPath;
-					if (!String::IsNullOrEmpty(HttpHandlerPath))
+					HttpHandlerPath = HttpHandlerPath->Replace(".", "\\.")->Replace("*", ".*")->Replace("?", ".?") + "$";
+					Regex^ regex = gcnew Regex(HttpHandlerPath, RegexOptions::IgnoreCase);
+					if (regex->IsMatch(this->Request->Url->AbsolutePath))
 					{
-						HttpHandlerPath = HttpHandlerPath->Replace(".", "\\.")->Replace("*", ".*")->Replace("?", ".?") + "$";
-						Regex^ regex = gcnew Regex(HttpHandlerPath, RegexOptions::IgnoreCase);
-						if (regex->IsMatch(this->Request->Url->AbsolutePath))
-						{
-							HttpHandler->ProcessRequest(this->Context);
-							this->Response->End();
-						}
+						kv->Value->ProcessRequest(this->Context);
+						this->Response->End();
 					}
 				}
 			}

@@ -168,6 +168,8 @@ namespace wnxd
 			void Application_Disposed(Object^ sender, EventArgs^ e);
 		internal:
 			static IDictionary<Type^, Enter^>^ _enter_list;
+			static IDictionary<Type^, IHttpHandler^>^ _handler_list;
+			static IDictionary<Type^, IHttpModule^>^ _module_list;
 			static array<Assembly^>^ GetAllAssembly();
 		protected:
 			Init();
