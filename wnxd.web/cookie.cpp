@@ -86,8 +86,6 @@ void Cookie::cookie_enter::Application_BeginRequest()
 			cc->HttpOnly = (bool)((json^)list["HttpOnly"])->TryConvert(Boolean::typeid);
 			cc->Path = (String^)((json^)list["Path"])->TryConvert(String::typeid);
 			cc->Secure = (bool)((json^)list["Secure"])->TryConvert(Boolean::typeid);
-			NameValueCollection^ nvc = (NameValueCollection^)((json^)list["Values"])->TryConvert(NameValueCollection::typeid);
-			if (nvc != nullptr) cc->Values->Add(nvc);
 			this->Response->AppendCookie(cc);
 			this->Response->AddHeader("P3P", "CP=NON DSP COR CURa ADMa DEVa TAIa PSAa PSDa IVAa IVDa CONa HISa TELa OTPa OUR UNRa IND UNI COM NAV INT DEM CNT PRE LOC");
 		}
